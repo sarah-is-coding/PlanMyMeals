@@ -1,26 +1,73 @@
-# PlanMyMeals
-Simple personal meal planner with a mobile-friendly web experience that lets you import or manually add recipes, build and save meal plans, and generate grocery lists. Optimized for Supabase’s free tier with minimal storage usage, allowing the app to scale to tens of thousands of lightweight, text-based recipes before any upgrades are needed. Keeping the backend lightweight also makes it feasible to cover hosting costs with non-intrusive ads rather than subscriptions.
+# React + TypeScript + Vite
 
-## Running Locally (Contributors)
-1. Create a Supabase project (free tier)
-2. Copy your project's URL + anon/public key into .env (reference .env.example)
-3. Apply the schema.sql to seed the database
-4. Run the app
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Tech Stack
-- Frontend: React + TypeScript + Vite
-- Styling: Tailwind CSS
-- Auth/DB: Supabase (PostgreSQL + RLS)
-- Client: Supabase JS (browser-side)
-- Dev: Vite, ESLint, Prettier
-- Hosting: Netlify for the web app; Supabase for backend
-- PWA: Web app manifest (service worker optional later)
+Currently, two official plugins are available:
 
-## Database Structure (Supabase)
-- `profiles`: user_id (pk, references auth.users), display_name; keeps everything scoped per user while staying lightweight.
-- `recipes`: id, user_id, title, description, source_url, prep_minutes, cook_minutes, servings, tags (text[]), instructions (text); text-first to minimize storage.
-- `recipe_ingredients`: id, recipe_id, ingredient_name, quantity, unit, notes; no global ingredient catalog to avoid bloat.
-- `meal_plans`: id, user_id, title, start_date, notes; container for saved plans.
-- `meal_plan_items`: id, meal_plan_id, recipe_id, planned_for (date), meal_type (breakfast/lunch/dinner/other), notes.
-- `grocery_lists`: id, user_id, meal_plan_id (nullable), title, created_at; can be generated from a plan or ad hoc.
-- `grocery_items`: id, list_id, ingredient_name, quantity, unit, is_checked; keeps lists editable on mobile.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
