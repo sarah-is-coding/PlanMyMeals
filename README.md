@@ -7,6 +7,15 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 3. Apply the schema.sql to seed the database
 4. Run the app
 
+## Tech Stack
+- Frontend: React + TypeScript + Vite
+- Styling: Tailwind CSS
+- Auth/DB: Supabase (PostgreSQL + RLS)
+- Client: Supabase JS (browser-side)
+- Dev: Vite, ESLint, Prettier
+- Hosting: Netlify for the web app; Supabase for backend
+- PWA: Web app manifest (service worker optional later)
+
 ## Database Structure (Supabase)
 - `profiles`: user_id (pk, references auth.users), display_name; keeps everything scoped per user while staying lightweight.
 - `recipes`: id, user_id, title, description, source_url, prep_minutes, cook_minutes, servings, tags (text[]), instructions (text); text-first to minimize storage.
