@@ -4,8 +4,17 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 ## Running Locally (Contributors)
 - Create a Supabase project (free tier)
 - Copy your project's URL + anon/public key into `.env` (reference `.env.example`)
-- Apply the `schema.sql` to seed the database
+- Apply `supabase/schema.sql` to seed the database
 - Run the app
+
+## Project Structure
+- `src/app`: app shell, routes, and top-level pages
+- `src/components`: shared UI components
+- `src/features`: feature modules (`auth`, `recipes`, `meal-plans`, `grocery`)
+- `src/lib`: shared clients/helpers (`supabaseClient`, `db`, `utils`)
+- `src/styles`: global and app styles
+- `supabase`: schema, migrations, and RLS notes
+- `docs`: architecture notes and user flows
 
 ## Tech Stack
 - Frontend: React + TypeScript + Vite
