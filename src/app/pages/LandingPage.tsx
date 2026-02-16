@@ -26,8 +26,8 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
 
       <section className="hero">
         <div className="hero__copy reveal">
-          <p className="kicker">Meal planning without the chaos</p>
-          <h1>Plan a full week of meals in minutes, not hours.</h1>
+          <p className="kicker">Meal planning, minus the chaos</p>
+          <h1>Plan a full week of meals in minutes, even seconds.</h1>
           <p>
             Import recipes, arrange your week visually, and generate grocery
             lists instantly. Built for busy households that still want to eat

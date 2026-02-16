@@ -1,5 +1,11 @@
 # PlanMyMeals
-Simple personal meal planner with a mobile-friendly web experience that lets you import or manually add recipes, build and save meal plans, and generate grocery lists. Optimized for Supabase's free tier with minimal storage usage, allowing the app to scale to tens of thousands of lightweight, text-based recipes before any upgrades are needed. Keeping the backend lightweight also makes it feasible to cover hosting costs with non-intrusive ads rather than subscriptions.
+Simple personal meal planner with a mobile-friendly web experience that lets you import or manually add recipes, build and save meal plans, and generate grocery lists. It also supports automated meal plan suggestions based on your preferences, calorie goals, or dietary targets. Optimized for Supabase's free tier with minimal storage usage, allowing the app to scale to tens of thousands of lightweight, text-based recipes before any upgrades are needed. Keeping the backend lightweight also makes it feasible to cover hosting costs with non-intrusive ads rather than subscriptions.
+
+## Core Features
+- Recipe import and manual recipe entry
+- Meal plan creation and saved weekly plans
+- Automated meal plan suggestions based on preferences, calorie goals, or dietary targets
+- Grocery list generation from planned meals
 
 ## Running Locally (Contributors)
 - Create a Supabase project (free tier)
