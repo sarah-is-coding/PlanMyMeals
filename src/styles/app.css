@@ -605,7 +605,7 @@
 }
 
 .workspace-layout {
-  max-width: 1320px;
+  max-width: 1480px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -739,7 +739,7 @@
 
 @media (min-width: 1400px) {
   .workspace-layout {
-    grid-template-columns: minmax(0, 1fr) 170px;
+    grid-template-columns: 170px minmax(0, 1fr) 170px;
     align-items: start;
   }
 

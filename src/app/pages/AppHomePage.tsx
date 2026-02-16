@@ -32,6 +32,10 @@ export default function AppHomePage({ session }: AppHomePageProps) {
       />
 
       <div className="workspace-layout">
+        <aside className="workspace-side workspace-side--left" aria-label="Sponsored">
+          <AdSlot size="skyscraper" label="Sponsored" />
+        </aside>
+
         <div className="workspace-main">
           <header className="workspace__header">
             <div>
