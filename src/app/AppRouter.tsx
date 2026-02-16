@@ -1,6 +1,10 @@
 import type { Session } from "@supabase/supabase-js";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "../features/auth/AuthPage";
+import GroceryPage from "../features/grocery/pages/GroceryPage";
+import MealPlansPage from "../features/meal-plans/pages/MealPlansPage";
+import RecipesPage from "../features/recipes/pages/RecipesPage";
+import AppWorkspaceLayout from "./components/AppWorkspaceLayout";
 import AppHomePage from "./pages/AppHomePage";
 import LandingPage from "./pages/LandingPage";
 
@@ -28,10 +32,13 @@ export default function AppRouter({ session, authReady }: AppRouterProps) {
         />
         <Route
           path="/app"
-          element={
-            session ? <AppHomePage session={session} /> : <Navigate to="/auth" replace />
-          }
-        />
+          element={session ? <AppWorkspaceLayout /> : <Navigate to="/auth" replace />}
+        >
+          <Route index element={<AppHomePage />} />
+          <Route path="recipes" element={<RecipesPage />} />
+          <Route path="meal-plans" element={<MealPlansPage />} />
+          <Route path="grocery" element={<GroceryPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

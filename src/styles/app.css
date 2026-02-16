@@ -620,39 +620,81 @@
   display: none;
 }
 
-.workspace__header {
+.workspace-topbar {
   max-width: 1080px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 1rem;
-  padding: clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(0.9rem, 2.8vw, 1.2rem);
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.85rem;
 }
 
-.workspace__header h1 {
-  margin: 0.5rem 0 0.45rem;
+.workspace-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: var(--ink);
   font-family: var(--font-display);
-}
-
-.workspace__header p {
-  margin: 0;
-  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-right: 0.25rem;
 }
 
 .workspace__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.56rem;
-  align-items: flex-start;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: auto;
 }
 
-.workspace__grid {
+.workspace__error {
+  max-width: 1080px;
+  margin: 0.7rem auto 0;
+}
+
+.workspace-nav {
+  display: flex;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.workspace-nav__link {
+  text-decoration: none;
+  white-space: nowrap;
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.workspace-nav__link--active {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(13, 148, 136, 0.5);
+  color: var(--brand-dark);
+}
+
+.workspace-route {
   max-width: 1080px;
   margin: 1rem auto 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
@@ -670,6 +712,12 @@
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.82);
   padding: 1rem;
+}
+
+.workspace-card h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
 }
 
 .workspace-card h2 {
@@ -704,7 +752,17 @@
     grid-template-columns: 1fr;
   }
 
-  .workspace__grid {
+  .workspace-topbar {
+    align-items: center;
+  }
+
+  .workspace-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .workspace-metrics {
     grid-template-columns: 1fr;
   }
 }
