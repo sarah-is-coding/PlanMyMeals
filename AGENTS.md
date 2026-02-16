@@ -127,6 +127,24 @@ This codebase follows **modular programming** and **separation of concerns**. Av
 
 ---
 
+## Ads & Loading UI defaults (required when ads are present)
+
+- Use a shared ad component at `src/components/ads/AdSlot.tsx` for all ad placements.
+- `AdSlot` must support multiple sizes (preset and custom dimensions) to fit different surfaces.
+- Keep ad placement minimal and non-intrusive:
+  - Prefer side whitespace rails on wide screens.
+  - Prefer footer/bottom sections over inline placement in primary workflows.
+  - Avoid inserting ads between form fields or critical action buttons.
+- On mobile, reduce ad density and keep core task flow uninterrupted.
+- Loading states should use a modal component at `src/components/feedback/LoadingModal.tsx` when appropriate.
+- If a loading modal includes an ad slot, prevent accidental clicks:
+  - Render the ad slot in non-interactive mode.
+  - Keep full-screen overlay blocking background interaction.
+  - Never place clickable ads directly under likely tap targets during loading transitions.
+- Always label ad areas clearly (for example, "Sponsored").
+
+---
+
 ## Testing expectations
 
 Minimum bar for each feature PR:
@@ -219,6 +237,7 @@ If no automated tests are added, PR must include detailed manual verification st
 - [ ] Minimal fields fetched for list views  
 - [ ] Manual test plan included  
 - [ ] Lint + typecheck pass  
+- [ ] Ad placement reviewed for non-intrusiveness and accidental-click safety (if ads are touched)
 
 ---
 

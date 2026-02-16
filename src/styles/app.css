@@ -272,6 +272,69 @@
   color: rgba(240, 253, 250, 0.9);
 }
 
+.landing__sponsor {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 1.2rem auto 0;
+  display: flex;
+  justify-content: center;
+}
+
+.ad-slot {
+  --ad-w: 320;
+  --ad-h: 50;
+  width: min(100%, calc(var(--ad-w) * 1px));
+}
+
+.ad-slot--desktop-only {
+  display: none;
+}
+
+.ad-slot--mobile-only {
+  display: block;
+}
+
+.ad-slot__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--ad-w) / var(--ad-h);
+  border-radius: 0.92rem;
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.86), rgba(241, 245, 249, 0.88));
+  overflow: hidden;
+}
+
+.ad-slot__meta {
+  position: absolute;
+  inset: 0.4rem 0.45rem auto 0.45rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ad-slot__surface {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.ad-slot__frame--blocked .ad-slot__surface {
+  filter: saturate(0.85);
+}
+
+.ad-slot__shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
 .btn {
   border: 1px solid transparent;
   border-radius: 0.82rem;
@@ -344,6 +407,79 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.loading-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.loading-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+.loading-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(540px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  text-align: center;
+  padding: 1.15rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 20px 52px rgba(2, 6, 23, 0.28);
+}
+
+.loading-modal__spinner {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  border: 3px solid rgba(148, 163, 184, 0.45);
+  border-top-color: var(--brand-dark);
+  animation: spin 850ms linear infinite;
+}
+
+.loading-modal__panel h2 {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.16rem;
+}
+
+.loading-modal__panel p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.loading-modal__ad {
+  margin-top: 0.2rem;
+}
+
+.loading-modal__ad--desktop {
+  display: none;
+}
+
+.loading-modal__ad--mobile {
+  display: block;
+}
+
+.loading-modal__note {
+  font-size: 0.82rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -468,6 +604,22 @@
   padding: clamp(1.2rem, 3vw, 2rem);
 }
 
+.workspace-layout {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.workspace-main {
+  min-width: 0;
+}
+
+.workspace-side {
+  display: none;
+}
+
 .workspace__header {
   max-width: 1080px;
   margin: 0 auto;
@@ -504,6 +656,13 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.workspace__sponsor {
+  max-width: 1080px;
+  margin: 1.2rem auto 0;
+  display: flex;
+  justify-content: center;
 }
 
 .workspace-card {
@@ -547,5 +706,54 @@
 
   .workspace__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 479px) {
+  .loading-modal__ad {
+    display: none;
+  }
+
+  .loading-modal__note {
+    display: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .ad-slot--desktop-only {
+    display: block;
+  }
+
+  .ad-slot--mobile-only {
+    display: none;
+  }
+
+  .loading-modal__ad--desktop {
+    display: block;
+  }
+
+  .loading-modal__ad--mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 1400px) {
+  .workspace-layout {
+    grid-template-columns: minmax(0, 1fr) 170px;
+    align-items: start;
+  }
+
+  .workspace-side {
+    display: flex;
+    justify-content: center;
+  }
+
+  .workspace-side .ad-slot {
+    position: sticky;
+    top: 1rem;
+  }
+
+  .workspace__sponsor {
+    display: none;
   }
 }

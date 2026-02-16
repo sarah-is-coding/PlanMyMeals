@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { authService } from "./services/authService";
+import LoadingModal from "../../components/feedback/LoadingModal";
 
 type AuthMode = "signIn" | "signUp" | "resetRequest" | "resetUpdate";
 
@@ -16,6 +17,12 @@ export default function AuthPage() {
   const [message, setMessage] = useState<string | null>(
     recoveryMode ? "Recovery link detected. Enter a new password." : null
   );
+  const loadingMessageByMode: Record<AuthMode, string> = {
+    signIn: "Signing you in securely.",
+    signUp: "Creating your account securely.",
+    resetRequest: "Preparing your password reset email.",
+    resetUpdate: "Updating your password securely.",
+  };
 
   const handleAuth = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -104,6 +111,11 @@ export default function AuthPage() {
 
   return (
     <main className="auth-page">
+      <LoadingModal
+        open={loading}
+        title="Please wait..."
+        message={loadingMessageByMode[mode]}
+      />
       <div className="auth-page__glow" />
       <div className="auth-shell">
         <section className="auth-intro">

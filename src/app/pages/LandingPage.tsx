@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import AdSlot from "../../components/ads/AdSlot";
 
 type LandingPageProps = {
   isAuthenticated: boolean;
@@ -115,6 +116,11 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
           {isAuthenticated ? "Continue Planning" : "Create Your Account"}
         </Link>
       </section>
+
+      <footer className="landing__sponsor">
+        <AdSlot size="leaderboard" label="Sponsored" className="ad-slot--desktop-only" />
+        <AdSlot size="banner" label="Sponsored" className="ad-slot--mobile-only" />
+      </footer>
     </main>
   );
 }
