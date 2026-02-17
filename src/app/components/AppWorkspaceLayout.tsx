@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import AdSlot from "../../components/ads/AdSlot";
 import LoadingModal from "../../components/feedback/LoadingModal";
 import { authService } from "../../features/auth/services/authService";
+import { clearRecipeListViewState } from "../../features/recipes/utils/recipeListViewState";
 
 const appNavItems = [
   { label: "Dashboard", to: "/app", end: true },
@@ -12,8 +13,15 @@ const appNavItems = [
 ];
 
 export default function AppWorkspaceLayout() {
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!location.pathname.startsWith("/app/recipes")) {
+      clearRecipeListViewState();
+    }
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     setLoading(true);
