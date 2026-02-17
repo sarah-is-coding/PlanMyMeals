@@ -15,16 +15,29 @@ import {
   shiftWeekStartIso,
 } from "../dateUtils";
 import type { MealPlanItem, MealPlannerRecipeSummary, MealType } from "../types";
+import {
+  loadMealPlannerViewState,
+  saveMealPlannerViewState,
+} from "../utils/mealPlannerViewState";
 
 export default function MealPlansPage() {
-  const [weekStartIso, setWeekStartIso] = useState(() => getWeekStartIso(new Date()));
+  const [initialState] = useState(() => {
+    const defaultWeekStartIso = getWeekStartIso(new Date());
+    return loadMealPlannerViewState({
+      weekStartIso: defaultWeekStartIso,
+      searchInput: "",
+      selectedDay: defaultWeekStartIso,
+      selectedMealType: DEFAULT_MEAL_TYPE,
+    });
+  });
+  const [weekStartIso, setWeekStartIso] = useState(initialState.weekStartIso);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
 
-  const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState(initialState.searchInput);
+  const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
   const [recipes, setRecipes] = useState<MealPlannerRecipeSummary[]>([]);
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -32,8 +45,10 @@ export default function MealPlansPage() {
   const weekDays = useMemo(() => getWeekDays(weekStartIso), [weekStartIso]);
   const weekLabel = useMemo(() => formatWeekRangeLabel(weekStartIso), [weekStartIso]);
 
-  const [selectedDay, setSelectedDay] = useState(() => weekDays[0]?.dateIso ?? "");
-  const [selectedMealType, setSelectedMealType] = useState<MealType>(DEFAULT_MEAL_TYPE);
+  const [selectedDay, setSelectedDay] = useState(initialState.selectedDay);
+  const [selectedMealType, setSelectedMealType] = useState<MealType>(
+    initialState.selectedMealType
+  );
   const [assigningKey, setAssigningKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,6 +65,15 @@ export default function MealPlansPage() {
 
     return () => window.clearTimeout(debounceId);
   }, [searchInput]);
+
+  useEffect(() => {
+    saveMealPlannerViewState({
+      weekStartIso,
+      searchInput,
+      selectedDay,
+      selectedMealType,
+    });
+  }, [weekStartIso, searchInput, selectedDay, selectedMealType]);
 
   useEffect(() => {
     let mounted = true;

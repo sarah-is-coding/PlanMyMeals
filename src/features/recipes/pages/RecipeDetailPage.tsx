@@ -225,11 +225,6 @@ export default function RecipeDetailPage() {
             )}
           </div>
         </div>
-        {!editing ? (
-          <p>This recipe is read-only. Tap Edit to make changes.</p>
-        ) : (
-          <p>Editing is enabled. Save when you are done.</p>
-        )}
         {error ? <p className="error">{error}</p> : null}
         {message ? <p className="message">{message}</p> : null}
       </article>

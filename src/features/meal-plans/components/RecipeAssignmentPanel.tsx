@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   MEAL_TYPE_OPTIONS,
   RECIPE_DETAIL_MEAL_PLANNER_STATE,
@@ -30,6 +30,21 @@ const formatTotalMinutes = (recipe: MealPlannerRecipeSummary): string => {
   return `${totalMinutes} min`;
 };
 
+const DESCRIPTION_PREVIEW_MAX_CHARS = 72;
+
+const formatDescriptionPreview = (description: string | null): string | null => {
+  const normalized = (description ?? "").replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.length <= DESCRIPTION_PREVIEW_MAX_CHARS) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, DESCRIPTION_PREVIEW_MAX_CHARS).trimEnd()}...`;
+};
+
 export default function RecipeAssignmentPanel({
   recipes,
   searchInput,
@@ -44,6 +59,7 @@ export default function RecipeAssignmentPanel({
   onSelectedMealTypeChange,
   onAssignRecipe,
 }: RecipeAssignmentPanelProps) {
+  const navigate = useNavigate();
   const hasSearchInput = searchInput.trim().length > 0;
   const [isTargetPopupOpen, setIsTargetPopupOpen] = useState(false);
   const [pendingRecipeId, setPendingRecipeId] = useState<string | null>(null);
@@ -81,11 +97,16 @@ export default function RecipeAssignmentPanel({
   const popupAssignmentKey =
     pendingRecipeId && draftDay ? `${pendingRecipeId}|${draftDay}|${draftMealType}` : null;
 
+  const openRecipeDetail = (recipeId: string) => {
+    navigate(`/app/recipes/${recipeId}`, {
+      state: RECIPE_DETAIL_MEAL_PLANNER_STATE,
+    });
+  };
+
   return (
     <article className="workspace-card meal-recipe-panel">
       <header className="meal-recipe-panel__header">
         <h2>Find recipes</h2>
-        <p>Drag recipes into the calendar, or use Add to plan for a day + meal popup.</p>
       </header>
 
       <div className="meal-recipe-panel__target-anchor">
@@ -167,34 +188,40 @@ export default function RecipeAssignmentPanel({
             {recipes.map((recipe) => {
               const isRecipeAssigning =
                 assigningKey !== null && assigningKey.startsWith(`${recipe.id}|`);
+              const descriptionPreview = formatDescriptionPreview(recipe.description);
 
               return (
                 <li key={recipe.id}>
                   <article
-                    className="meal-recipe-card"
+                    className="meal-recipe-card meal-recipe-card--clickable"
                     draggable
+                    onClick={() => openRecipeDetail(recipe.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openRecipeDetail(recipe.id);
+                      }
+                    }}
+                    role="link"
+                    tabIndex={0}
                     onDragStart={(event) => {
                       event.dataTransfer.setData(RECIPE_DRAG_MIME_TYPE, recipe.id);
                       event.dataTransfer.setData("text/plain", recipe.id);
                       event.dataTransfer.effectAllowed = "copy";
                     }}
                   >
-                    <Link
-                      className="meal-recipe-card__link"
-                      to={`/app/recipes/${recipe.id}`}
-                      state={RECIPE_DETAIL_MEAL_PLANNER_STATE}
-                      draggable={false}
-                    >
-                      <div className="meal-recipe-card__head">
-                        <h3>{recipe.title}</h3>
-                        <span>{formatTotalMinutes(recipe)}</span>
-                      </div>
-                      {recipe.description ? <p>{recipe.description}</p> : null}
-                    </Link>
+                    <div className="meal-recipe-card__head">
+                      <h3>{recipe.title}</h3>
+                      <span>{formatTotalMinutes(recipe)}</span>
+                    </div>
+                    {descriptionPreview ? (
+                      <p className="meal-recipe-card__description">{descriptionPreview}</p>
+                    ) : null}
                     <button
                       type="button"
                       className="btn btn--ghost"
-                      onClick={() => {
+                      onClick={(event) => {
+                        event.stopPropagation();
                         openTargetPopup(recipe);
                       }}
                       disabled={!weekDays[0] || isRecipeAssigning}

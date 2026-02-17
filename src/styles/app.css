@@ -1213,15 +1213,15 @@
   color: #1e293b;
 }
 
-.meal-chip__link {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #0f766e;
-  text-decoration: none;
+.meal-chip--clickable {
+  cursor: pointer;
 }
 
-.meal-chip__link:hover {
-  text-decoration: underline;
+.meal-chip--clickable:hover,
+.meal-chip--clickable:focus-visible {
+  border-color: rgba(13, 148, 136, 0.85);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
+  outline: none;
 }
 
 .meal-chip__remove {
@@ -1326,6 +1326,13 @@
   cursor: grabbing;
 }
 
+.meal-recipe-card--clickable:hover,
+.meal-recipe-card--clickable:focus-visible {
+  border-color: rgba(13, 148, 136, 0.85);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
+  outline: none;
+}
+
 .meal-recipe-card__head {
   display: flex;
   gap: 0.46rem;
@@ -1344,17 +1351,13 @@
   color: #64748b;
 }
 
-.meal-recipe-card__link {
-  text-decoration: none;
-  color: inherit;
-  display: grid;
-  gap: 0.58rem;
-}
-
-.meal-recipe-card p {
+.meal-recipe-card__description {
   margin: 0;
   color: #475569;
   font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 960px) {

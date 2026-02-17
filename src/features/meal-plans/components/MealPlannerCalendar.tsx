@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   MEAL_TYPE_OPTIONS,
   RECIPE_DETAIL_MEAL_PLANNER_STATE,
@@ -34,6 +34,7 @@ export default function MealPlannerCalendar({
   onAssignRecipe,
   onRemoveItem,
 }: MealPlannerCalendarProps) {
+  const navigate = useNavigate();
   const [dragOverSlotKey, setDragOverSlotKey] = useState<string | null>(null);
 
   const slotMap = useMemo(() => {
@@ -65,6 +66,16 @@ export default function MealPlannerCalendar({
     }
 
     void onAssignRecipe(recipeId, dayIso, mealType);
+  };
+
+  const openRecipeDetail = (recipeId: string | null) => {
+    if (!recipeId) {
+      return;
+    }
+
+    navigate(`/app/recipes/${recipeId}`, {
+      state: RECIPE_DETAIL_MEAL_PLANNER_STATE,
+    });
   };
 
   return (
@@ -122,22 +133,28 @@ export default function MealPlannerCalendar({
                     ) : (
                       <ul className="meal-slot__items">
                         {slotItems.map((item) => (
-                          <li key={item.id} className="meal-chip">
-                            {item.recipeId ? (
-                              <Link
-                                className="meal-chip__link"
-                                to={`/app/recipes/${item.recipeId}`}
-                                state={RECIPE_DETAIL_MEAL_PLANNER_STATE}
-                              >
-                                {item.recipeTitle}
-                              </Link>
-                            ) : (
-                              <span>{item.recipeTitle}</span>
-                            )}
+                          <li
+                            key={item.id}
+                            className={`meal-chip${item.recipeId ? " meal-chip--clickable" : ""}`}
+                            onClick={() => openRecipeDetail(item.recipeId)}
+                            onKeyDown={(event) => {
+                              if (!item.recipeId) {
+                                return;
+                              }
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                openRecipeDetail(item.recipeId);
+                              }
+                            }}
+                            role={item.recipeId ? "link" : undefined}
+                            tabIndex={item.recipeId ? 0 : undefined}
+                          >
+                            <span>{item.recipeTitle}</span>
                             <button
                               type="button"
                               className="meal-chip__remove"
-                              onClick={() => {
+                              onClick={(event) => {
+                                event.stopPropagation();
                                 void onRemoveItem(item.id);
                               }}
                               disabled={removingItemId === item.id}
