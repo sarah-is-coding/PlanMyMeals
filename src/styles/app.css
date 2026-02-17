@@ -659,6 +659,13 @@
   margin: 0.7rem auto 0;
 }
 
+.workspace__header-sponsor {
+  max-width: 1080px;
+  margin: 0.65rem auto 0;
+  display: none;
+  justify-content: center;
+}
+
 .workspace-nav {
   display: flex;
   gap: 0.45rem;
@@ -995,6 +1002,11 @@
   justify-content: space-between;
   gap: 0.56rem;
   flex-wrap: wrap;
+}
+
+.recipe-pagination__controls .btn {
+  width: 7.25rem;
+  justify-content: center;
 }
 
 .recipe-pagination__count {
@@ -1409,6 +1421,14 @@
 
   .workspace-topbar {
     align-items: center;
+  }
+
+  .workspace__header-sponsor {
+    display: flex;
+  }
+
+  .workspace__sponsor {
+    display: flex;
   }
 
   .workspace-nav--desktop {

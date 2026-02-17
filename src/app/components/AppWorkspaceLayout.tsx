@@ -78,6 +78,10 @@ export default function AppWorkspaceLayout() {
             </div>
           </header>
 
+          <section className="workspace__header-sponsor" aria-label="Sponsored">
+            <AdSlot size="banner" label="Sponsored" />
+          </section>
+
           {error ? <p className="error workspace__error">{error}</p> : null}
 
           <Outlet />
