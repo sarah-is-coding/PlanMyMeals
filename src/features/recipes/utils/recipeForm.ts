@@ -43,8 +43,21 @@ const parseTags = (value: string): string[] => {
   return Array.from(new Set(tags));
 };
 
+const createClientId = (): string => {
+  if (
+    typeof globalThis.crypto !== "undefined" &&
+    typeof globalThis.crypto.randomUUID === "function"
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  const nowPart = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  return `tmp-${nowPart}-${randomPart}`;
+};
+
 export const createEmptyIngredient = (): RecipeFormIngredient => ({
-  id: crypto.randomUUID(),
+  id: createClientId(),
   ingredientName: "",
   quantity: "",
   unit: "",

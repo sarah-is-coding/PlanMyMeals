@@ -769,6 +769,7 @@
 }
 
 .recipe-search {
+  position: relative;
   flex: 1 1 280px;
 }
 
@@ -777,9 +778,40 @@
   border: 1px solid var(--alpha-slate-62);
   background: var(--color-white);
   border-radius: 0.78rem;
-  padding: 0.72rem 0.82rem;
+  padding: 0.72rem 2.35rem 0.72rem 0.82rem;
   color: var(--ink);
   font-size: 0.96rem;
+}
+
+.recipe-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.recipe-search__clear {
+  position: absolute;
+  right: 0.46rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 1px solid var(--alpha-slate-42);
+  border-radius: 999px;
+  background: var(--alpha-bg-241-88);
+  color: var(--color-muted-soft);
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.recipe-search__clear:hover,
+.recipe-search__clear:focus-visible {
+  border-color: var(--alpha-brand-dark-78);
+  color: var(--brand-dark);
+  outline: none;
 }
 
 .recipe-filters {

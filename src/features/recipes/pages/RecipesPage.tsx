@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { listRecipes } from "../api";
 import type { RecipeListFilters, RecipeSummary } from "../types";
@@ -30,6 +30,7 @@ export default function RecipesPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const debounceId = window.setTimeout(() => {
@@ -106,6 +107,7 @@ export default function RecipesPage() {
           <label className="recipe-search" htmlFor="recipe-search-input">
             <span className="sr-only">Search recipes</span>
             <input
+              ref={searchInputRef}
               id="recipe-search-input"
               type="search"
               placeholder="Search recipes..."
@@ -115,6 +117,20 @@ export default function RecipesPage() {
                 setCurrentPage(1);
               }}
             />
+            {searchInput ? (
+              <button
+                type="button"
+                className="recipe-search__clear"
+                aria-label="Clear recipe search"
+                onClick={() => {
+                  setSearchInput("");
+                  setCurrentPage(1);
+                  searchInputRef.current?.focus();
+                }}
+              >
+                &times;
+              </button>
+            ) : null}
           </label>
           <button
             type="button"
