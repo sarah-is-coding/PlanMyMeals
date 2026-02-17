@@ -83,3 +83,11 @@ export const saveRecipeListViewState = (state: RecipeListViewState): void => {
 
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 };
+
+export const clearRecipeListViewState = (): void => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(STORAGE_KEY);
+};

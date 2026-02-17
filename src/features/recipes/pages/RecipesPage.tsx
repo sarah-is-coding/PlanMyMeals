@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { listRecipes } from "../api";
 import type { RecipeListFilters, RecipeSummary } from "../types";
 import {
+  clearRecipeListViewState,
   createDefaultRecipeListFilters,
   loadRecipeListViewState,
   saveRecipeListViewState,
@@ -29,14 +30,6 @@ export default function RecipesPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    saveRecipeListViewState({
-      searchInput,
-      filters,
-      currentPage,
-    });
-  }, [searchInput, filters, currentPage]);
 
   useEffect(() => {
     const debounceId = window.setTimeout(() => {
@@ -96,6 +89,14 @@ export default function RecipesPage() {
     }
   }, [currentPage, totalPages]);
 
+  const persistListState = () => {
+    saveRecipeListViewState({
+      searchInput,
+      filters,
+      currentPage,
+    });
+  };
+
   return (
     <section className="workspace-route recipe-route">
       <article className="workspace-card recipe-shell">
@@ -125,7 +126,12 @@ export default function RecipesPage() {
           >
             Filters
           </button>
-          <Link className="btn btn--primary" to="/app/recipes/new">
+          <Link
+            className="btn btn--primary"
+            to="/app/recipes/new"
+            state={{ prefillTitle: searchInput.trim() }}
+            onClick={() => clearRecipeListViewState()}
+          >
             Add Recipe
           </Link>
         </div>
@@ -213,7 +219,11 @@ export default function RecipesPage() {
             <ul className="recipe-list">
               {recipes.map((recipe) => (
                 <li key={recipe.id}>
-                  <Link className="recipe-card" to={`/app/recipes/${recipe.id}`}>
+                  <Link
+                    className="recipe-card"
+                    to={`/app/recipes/${recipe.id}`}
+                    onClick={persistListState}
+                  >
                     <div className="recipe-card__head">
                       <h2>{recipe.title}</h2>
                       <span>{formatTotalMinutes(recipe)}</span>

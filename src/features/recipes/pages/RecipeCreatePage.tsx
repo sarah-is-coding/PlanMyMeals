@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import RecipeFormFields from "../components/RecipeFormFields";
 import { createRecipe } from "../api";
 import {
@@ -12,9 +12,26 @@ import {
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
 type RecipeIngredientFieldName = "ingredientName" | "quantity" | "unit" | "notes";
 
+type RecipeCreateLocationState = {
+  prefillTitle?: string;
+};
+
 export default function RecipeCreatePage() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [values, setValues] = useState(createEmptyRecipeFormValues);
+  const locationState = (location.state ?? null) as RecipeCreateLocationState | null;
+  const [values, setValues] = useState<RecipeFormValues>(() => {
+    const initialValues = createEmptyRecipeFormValues();
+    const prefillTitle = locationState?.prefillTitle?.trim() ?? "";
+    if (!prefillTitle) {
+      return initialValues;
+    }
+
+    return {
+      ...initialValues,
+      title: prefillTitle,
+    };
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
