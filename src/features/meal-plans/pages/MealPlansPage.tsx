@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import LoadingModal from "../../../components/feedback/LoadingModal";
+import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
   addMealPlanItem,
   deleteMealPlanItem,
@@ -34,6 +36,7 @@ export default function MealPlansPage() {
   const [weekStartIso, setWeekStartIso] = useState(initialState.weekStartIso);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [hasLoadedInitialItems, setHasLoadedInitialItems] = useState(false);
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
@@ -52,6 +55,10 @@ export default function MealPlansPage() {
     initialState.selectedMealType
   );
   const [assigningKey, setAssigningKey] = useState<string | null>(null);
+  const showInitialLoadingModal = useLoadingGate(
+    loadingItems && !hasLoadedInitialItems,
+    { showDelayMs: 0, minVisibleMs: 480 }
+  );
 
   useEffect(() => {
     const currentWeekDates = new Set(weekDays.map((day) => day.dateIso));
@@ -96,6 +103,7 @@ export default function MealPlansPage() {
       } finally {
         if (mounted) {
           setLoadingItems(false);
+          setHasLoadedInitialItems(true);
         }
       }
     };
@@ -219,6 +227,11 @@ export default function MealPlansPage() {
 
   return (
     <section className="workspace-route meal-planner-route">
+      <LoadingModal
+        open={showInitialLoadingModal}
+        title="Loading meal planner..."
+        message="Preparing your calendar and saved meals."
+      />
       {plannerError ? <p className="error">{plannerError}</p> : null}
 
       <div className="meal-planner-layout">
@@ -226,7 +239,6 @@ export default function MealPlansPage() {
           weekLabel={weekLabel}
           weekDays={weekDays}
           items={items}
-          loading={loadingItems}
           removingItemId={removingItemId}
           movingItemId={movingItemId}
           onShiftWeek={(weekOffset) =>

@@ -26,11 +26,13 @@ export default function LoadingModal({
           size="rectangle"
           label="Sponsored"
           className="loading-modal__ad loading-modal__ad--desktop"
+          interactive={false}
         />
         <AdSlot
           size="banner"
           label="Sponsored"
           className="loading-modal__ad loading-modal__ad--mobile"
+          interactive={false}
         />
       </div>
     </div>

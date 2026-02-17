@@ -12,7 +12,6 @@ type MealPlannerCalendarProps = {
   weekLabel: string;
   weekDays: MealPlannerDay[];
   items: MealPlanItem[];
-  loading: boolean;
   removingItemId: string | null;
   movingItemId: string | null;
   onShiftWeek: (weekOffset: number) => void;
@@ -30,7 +29,6 @@ export default function MealPlannerCalendar({
   weekLabel,
   weekDays,
   items,
-  loading,
   removingItemId,
   movingItemId,
   onShiftWeek,
@@ -115,8 +113,6 @@ export default function MealPlannerCalendar({
         </div>
       </header>
 
-      {loading ? <p>Loading calendar...</p> : null}
-
       <div className="meal-calendar__grid">
         {weekDays.map((day) => (
           <section key={day.dateIso} className="meal-day">
@@ -141,7 +137,13 @@ export default function MealPlannerCalendar({
                       const isMealPlanItemDrag = dragTypes.includes(
                         MEAL_PLAN_ITEM_DRAG_MIME_TYPE
                       );
+                      const plainTextPayload = event.dataTransfer.getData("text/plain");
+                      const isMealPlanItemTextFallback =
+                        plainTextPayload.startsWith("meal-plan-item:");
                       event.dataTransfer.dropEffect = isMealPlanItemDrag ? "move" : "copy";
+                      if (isMealPlanItemTextFallback) {
+                        event.dataTransfer.dropEffect = "move";
+                      }
                     }}
                     onDragEnter={() => setDragOverSlotKey(slotKey)}
                     onDragLeave={() => setDragOverSlotKey((current) => (current === slotKey ? null : current))}
@@ -173,7 +175,7 @@ export default function MealPlannerCalendar({
                             onDragStart={(event) => {
                               event.dataTransfer.setData(MEAL_PLAN_ITEM_DRAG_MIME_TYPE, item.id);
                               event.dataTransfer.setData("text/plain", `meal-plan-item:${item.id}`);
-                              event.dataTransfer.effectAllowed = "move";
+                              event.dataTransfer.effectAllowed = "copyMove";
                             }}
                           >
                             <span>{item.recipeTitle}</span>
