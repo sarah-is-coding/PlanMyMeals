@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import RecipeFormFields from "../components/RecipeFormFields";
 import RecipeReadArticle from "../components/RecipeReadArticle";
@@ -13,9 +13,17 @@ import {
 
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
 type RecipeIngredientFieldName = "ingredientName" | "quantity" | "unit" | "notes";
+type RecipeDetailLocationState = {
+  from?: "meal-planner";
+};
 
 export default function RecipeDetailPage() {
+  const location = useLocation();
   const { recipeId } = useParams();
+  const locationState = (location.state ?? null) as RecipeDetailLocationState | null;
+  const isFromMealPlanner = locationState?.from === "meal-planner";
+  const backTo = isFromMealPlanner ? "/app/meal-plans" : "/app/recipes";
+  const backLabel = isFromMealPlanner ? "Back to Meal Planner" : "Back to Recipes";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -176,8 +184,8 @@ export default function RecipeDetailPage() {
         <article className="workspace-card">
           <h1>Recipe not found</h1>
           <p>This recipe may have been removed or you might not have access.</p>
-          <Link className="btn btn--ghost" to="/app/recipes">
-            Back to Recipes
+          <Link className="btn btn--ghost" to={backTo}>
+            {backLabel}
           </Link>
         </article>
       </section>
@@ -190,8 +198,8 @@ export default function RecipeDetailPage() {
         <div className="recipe-page-header">
           <h1>{formValues.title || "Recipe Details"}</h1>
           <div className="recipe-page-header__actions">
-            <Link className="btn btn--ghost" to="/app/recipes">
-              Back to Recipes
+            <Link className="btn btn--ghost" to={backTo}>
+              {backLabel}
             </Link>
             {!editing ? (
               <button
