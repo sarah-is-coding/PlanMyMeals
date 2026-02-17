@@ -6,10 +6,10 @@ import { authService } from "../../features/auth/services/authService";
 import { clearRecipeListViewState } from "../../features/recipes/utils/recipeListViewState";
 
 const appNavItems = [
-  { label: "Dashboard", to: "/app", end: true },
-  { label: "Recipes", to: "/app/recipes" },
-  { label: "Meal Plans", to: "/app/meal-plans" },
-  { label: "Grocery Lists", to: "/app/grocery" },
+  { label: "Dashboard", mobileLabel: "Home", to: "/app", end: true },
+  { label: "Recipes", mobileLabel: "Recipes", to: "/app/recipes" },
+  { label: "Meal Plans", mobileLabel: "Plans", to: "/app/meal-plans" },
+  { label: "Grocery Lists", mobileLabel: "Grocery", to: "/app/grocery" },
 ];
 
 export default function AppWorkspaceLayout() {
@@ -53,7 +53,7 @@ export default function AppWorkspaceLayout() {
               PlanMyMeals
             </Link>
 
-            <nav className="workspace-nav" aria-label="Primary">
+            <nav className="workspace-nav workspace-nav--desktop" aria-label="Primary">
               {appNavItems.map((item) => (
                 <NavLink
                   key={item.to}
@@ -78,6 +78,21 @@ export default function AppWorkspaceLayout() {
           {error ? <p className="error workspace__error">{error}</p> : null}
 
           <Outlet />
+
+          <nav className="workspace-bottom-nav" aria-label="Primary">
+            {appNavItems.map((item) => (
+              <NavLink
+                key={`mobile-${item.to}`}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `workspace-nav__link${isActive ? " workspace-nav__link--active" : ""}`
+                }
+              >
+                {item.mobileLabel}
+              </NavLink>
+            ))}
+          </nav>
 
           <footer className="workspace__sponsor">
             <AdSlot size="leaderboard" label="Sponsored" className="ad-slot--desktop-only" />

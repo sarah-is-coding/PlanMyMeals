@@ -665,9 +665,7 @@
   flex: 1 1 auto;
   min-width: 0;
   justify-content: center;
-  overflow-x: auto;
-  padding-bottom: 0.15rem;
-  scrollbar-width: thin;
+  flex-wrap: wrap;
 }
 
 .workspace-nav__link {
@@ -686,6 +684,10 @@
   background: var(--alpha-brand-20);
   border-color: var(--alpha-brand-dark-78);
   color: var(--brand-dark);
+}
+
+.workspace-bottom-nav {
+  display: none;
 }
 
 .workspace-route {
@@ -1381,6 +1383,10 @@
 }
 
 @media (max-width: 960px) {
+  .workspace {
+    padding-bottom: calc(clamp(1.2rem, 3vw, 2rem) + 5rem + env(safe-area-inset-bottom));
+  }
+
   .hero {
     grid-template-columns: 1fr;
   }
@@ -1405,10 +1411,31 @@
     align-items: center;
   }
 
-  .workspace-nav {
-    order: 3;
-    width: 100%;
-    justify-content: flex-start;
+  .workspace-nav--desktop {
+    display: none;
+  }
+
+  .workspace-bottom-nav {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.4rem;
+    border: 1px solid var(--alpha-brand-22);
+    border-radius: 0.9rem;
+    background: var(--alpha-cyan-240-94);
+    box-shadow: 0 14px 34px var(--alpha-ink-16);
+  }
+
+  .workspace-bottom-nav .workspace-nav__link {
+    padding: 0.6rem 0.35rem;
+    border-radius: 0.7rem;
+    text-align: center;
+    font-size: 0.82rem;
   }
 
   .workspace-metrics {
