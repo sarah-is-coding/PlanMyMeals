@@ -181,7 +181,7 @@ export default function RecipeDetailPage() {
   if (!formValues) {
     return (
       <section className="workspace-route recipe-route">
-        <article className="workspace-card">
+        <article className="workspace-card recipe-empty-state">
           <h1>Recipe not found</h1>
           <p>This recipe may have been removed or you might not have access.</p>
           <Link className="btn btn--ghost" to={backTo}>
