@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listRecipes } from "../api";
 import type { RecipeListFilters, RecipeSummary } from "../types";
-
-const DEFAULT_FILTERS: RecipeListFilters = {
-  sort: "newest",
-  tag: "",
-  maxTotalMinutes: "",
-  onlyWithSource: false,
-};
+import {
+  createDefaultRecipeListFilters,
+  loadRecipeListViewState,
+  saveRecipeListViewState,
+} from "../utils/recipeListViewState";
 
 const formatTotalMinutes = (recipe: RecipeSummary): string => {
   const totalMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
@@ -19,13 +17,21 @@ const formatTotalMinutes = (recipe: RecipeSummary): string => {
 };
 
 export default function RecipesPage() {
-  const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<RecipeListFilters>(DEFAULT_FILTERS);
+  const [initialState] = useState(loadRecipeListViewState);
+  const [searchInput, setSearchInput] = useState(initialState.searchInput);
+  const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
+  const [filters, setFilters] = useState<RecipeListFilters>(initialState.filters);
   const [showFilters, setShowFilters] = useState(false);
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    saveRecipeListViewState({
+      searchInput,
+      filters,
+    });
+  }, [searchInput, filters]);
 
   useEffect(() => {
     const debounceId = window.setTimeout(() => {
@@ -166,9 +172,9 @@ export default function RecipesPage() {
             <button
               type="button"
               className="btn btn--ghost"
-              onClick={() => setFilters(DEFAULT_FILTERS)}
+              onClick={() => setFilters(createDefaultRecipeListFilters())}
             >
-              Clear filters
+              Reset filters
             </button>
           </section>
         ) : null}
