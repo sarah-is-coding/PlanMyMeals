@@ -3,6 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "../features/auth/AuthPage";
 import GroceryPage from "../features/grocery/pages/GroceryPage";
 import MealPlansPage from "../features/meal-plans/pages/MealPlansPage";
+import RecipeCreatePage from "../features/recipes/pages/RecipeCreatePage";
+import RecipeDetailPage from "../features/recipes/pages/RecipeDetailPage";
 import RecipesPage from "../features/recipes/pages/RecipesPage";
 import AppWorkspaceLayout from "./components/AppWorkspaceLayout";
 import AppHomePage from "./pages/AppHomePage";
@@ -36,6 +38,8 @@ export default function AppRouter({ session, authReady }: AppRouterProps) {
         >
           <Route index element={<AppHomePage />} />
           <Route path="recipes" element={<RecipesPage />} />
+          <Route path="recipes/new" element={<RecipeCreatePage />} />
+          <Route path="recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="meal-plans" element={<MealPlansPage />} />
           <Route path="grocery" element={<GroceryPage />} />
         </Route>

@@ -25,18 +25,13 @@ export default function LoadingModal({
         <AdSlot
           size="rectangle"
           label="Sponsored"
-          interactive={false}
           className="loading-modal__ad loading-modal__ad--desktop"
         />
         <AdSlot
           size="banner"
           label="Sponsored"
-          interactive={false}
           className="loading-modal__ad loading-modal__ad--mobile"
         />
-        <p className="loading-modal__note">
-          Ad interactions are disabled while loading to prevent accidental clicks.
-        </p>
       </div>
     </div>
   );
