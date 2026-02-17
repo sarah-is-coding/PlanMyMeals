@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MEAL_TYPE_OPTIONS,
@@ -66,6 +66,38 @@ export default function RecipeAssignmentPanel({
   const [pendingRecipeTitle, setPendingRecipeTitle] = useState("");
   const [draftDay, setDraftDay] = useState(selectedDay);
   const [draftMealType, setDraftMealType] = useState<MealType>(selectedMealType);
+  const [popupPlacement, setPopupPlacement] = useState<"above" | "below">("above");
+  const [popupMaxHeightPx, setPopupMaxHeightPx] = useState<number | null>(null);
+  const targetAnchorRef = useRef<HTMLDivElement | null>(null);
+  const targetPopupRef = useRef<HTMLElement | null>(null);
+
+  const updateTargetPopupLayout = useCallback(() => {
+    if (!isTargetPopupOpen || !targetAnchorRef.current || !targetPopupRef.current) {
+      return;
+    }
+
+    const popupGapPx = 8;
+    const viewportPaddingPx = 8;
+    const anchorRect = targetAnchorRef.current.getBoundingClientRect();
+    const popupHeight = targetPopupRef.current.offsetHeight;
+    const spaceAbove = anchorRect.top - viewportPaddingPx;
+    const spaceBelow = window.innerHeight - anchorRect.bottom - viewportPaddingPx;
+
+    const nextPlacement =
+      spaceAbove >= popupHeight + popupGapPx
+        ? "above"
+        : spaceBelow >= popupHeight + popupGapPx
+          ? "below"
+          : spaceBelow > spaceAbove
+            ? "below"
+            : "above";
+
+    const availableSpace = nextPlacement === "above" ? spaceAbove : spaceBelow;
+    const nextMaxHeight = Math.max(0, Math.floor(availableSpace - popupGapPx));
+
+    setPopupPlacement(nextPlacement);
+    setPopupMaxHeightPx(nextMaxHeight > 0 ? nextMaxHeight : null);
+  }, [isTargetPopupOpen]);
 
   const closeTargetPopup = () => {
     setIsTargetPopupOpen(false);
@@ -73,6 +105,7 @@ export default function RecipeAssignmentPanel({
     setPendingRecipeTitle("");
     setDraftDay(selectedDay);
     setDraftMealType(selectedMealType);
+    setPopupMaxHeightPx(null);
   };
 
   const openTargetPopup = (recipe: MealPlannerRecipeSummary) => {
@@ -80,6 +113,8 @@ export default function RecipeAssignmentPanel({
     setPendingRecipeTitle(recipe.title);
     setDraftDay(selectedDay || weekDays[0]?.dateIso || "");
     setDraftMealType(selectedMealType);
+    setPopupPlacement("above");
+    setPopupMaxHeightPx(null);
     setIsTargetPopupOpen(true);
   };
 
@@ -103,16 +138,48 @@ export default function RecipeAssignmentPanel({
     });
   };
 
+  useEffect(() => {
+    if (!isTargetPopupOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      updateTargetPopupLayout();
+    });
+
+    const handleViewportChange = () => {
+      updateTargetPopupLayout();
+    };
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [isTargetPopupOpen, updateTargetPopupLayout]);
+
+  useEffect(() => {
+    if (!isTargetPopupOpen) {
+      return;
+    }
+    updateTargetPopupLayout();
+  }, [isTargetPopupOpen, pendingRecipeTitle, updateTargetPopupLayout]);
+
   return (
     <article className="workspace-card meal-recipe-panel">
       <header className="meal-recipe-panel__header">
         <h2>Find recipes</h2>
       </header>
 
-      <div className="meal-recipe-panel__target-anchor">
+      <div className="meal-recipe-panel__target-anchor" ref={targetAnchorRef}>
         {isTargetPopupOpen ? (
           <section
-            className="meal-target-popup"
+            ref={targetPopupRef}
+            className={`meal-target-popup meal-target-popup--${popupPlacement}`}
+            style={popupMaxHeightPx ? { maxHeight: `${popupMaxHeightPx}px` } : undefined}
             role="dialog"
             aria-label="Choose day and meal for recipe assignment"
           >

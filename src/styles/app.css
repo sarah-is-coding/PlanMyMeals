@@ -130,8 +130,8 @@
 }
 
 .stat-card {
-  background: var(--alpha-white-74);
-  border: 1px solid var(--alpha-slate-36);
+  background: var(--alpha-cyan-240-94);
+  border: 1px solid var(--alpha-brand-20);
   border-radius: 1rem;
   padding: 0.8rem 0.9rem;
   backdrop-filter: blur(8px);
@@ -184,8 +184,8 @@
   gap: 0.2rem;
   padding: 0.8rem;
   border-radius: 0.85rem;
-  background: var(--alpha-white-88);
-  border: 1px solid var(--alpha-slate-light-60);
+  background: var(--alpha-white-90);
+  border: 1px solid var(--alpha-brand-20);
 }
 
 .plan-list span {
@@ -233,8 +233,8 @@
 .feature-card {
   padding: 1.2rem;
   border-radius: 1rem;
-  background: var(--alpha-white-84);
-  border: 1px solid var(--alpha-slate-33);
+  background: var(--alpha-bg-241-88);
+  border: 1px solid var(--alpha-brand-20);
 }
 
 .feature-card h3 {
@@ -365,13 +365,13 @@
 }
 
 .btn--ghost {
-  color: var(--color-ink);
-  border-color: var(--alpha-slate-50);
-  background: var(--alpha-white-82);
+  color: var(--brand-dark);
+  border-color: var(--alpha-brand-dark-50);
+  background: var(--alpha-brand-12);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--alpha-white-96);
+  background: var(--alpha-brand-20);
 }
 
 .reveal {
@@ -436,8 +436,8 @@
   text-align: center;
   padding: 1.15rem;
   border-radius: 1rem;
-  background: var(--alpha-white-96);
-  border: 1px solid var(--alpha-slate-50);
+  background: var(--alpha-cyan-240-94);
+  border: 1px solid var(--alpha-brand-20);
   box-shadow: 0 20px 52px var(--alpha-ink-deep-28);
 }
 
@@ -540,8 +540,8 @@
 }
 
 .auth-panel {
-  background: var(--alpha-bg-241-78);
-  border: 1px solid var(--alpha-slate-40);
+  background: var(--alpha-bg-241-88);
+  border: 1px solid var(--alpha-brand-20);
   border-radius: 1rem;
   padding: clamp(1rem, 2.8vw, 1.4rem);
 }
@@ -559,6 +559,7 @@
 .auth-form label {
   font-weight: 700;
   font-size: 0.93rem;
+  color: var(--color-ink-soft);
 }
 
 .auth-form input {
@@ -623,8 +624,8 @@
 .workspace-topbar {
   max-width: 1080px;
   margin: 0 auto;
-  background: var(--alpha-white-85);
-  border: 1px solid var(--alpha-slate-40);
+  background: var(--alpha-cyan-240-94);
+  border: 1px solid var(--alpha-brand-20);
   border-radius: 1rem;
   padding: clamp(0.9rem, 2.8vw, 1.2rem);
   display: flex;
@@ -672,9 +673,9 @@
 .workspace-nav__link {
   text-decoration: none;
   white-space: nowrap;
-  color: var(--color-ink);
-  border: 1px solid var(--alpha-slate-50);
-  background: var(--alpha-white-86);
+  color: var(--color-ink-soft);
+  border: 1px solid var(--alpha-brand-22);
+  background: var(--alpha-brand-12);
   border-radius: 999px;
   padding: 0.4rem 0.75rem;
   font-weight: 700;
@@ -682,8 +683,8 @@
 }
 
 .workspace-nav__link--active {
-  background: var(--alpha-brand-12);
-  border-color: var(--alpha-brand-dark-50);
+  background: var(--alpha-brand-20);
+  border-color: var(--alpha-brand-dark-78);
   color: var(--brand-dark);
 }
 
@@ -708,9 +709,9 @@
 }
 
 .workspace-card {
-  border: 1px solid var(--alpha-slate-44);
+  border: 1px solid var(--alpha-brand-22);
   border-radius: 1rem;
-  background: var(--alpha-white-82);
+  background: var(--alpha-bg-241-88);
   padding: 1rem;
 }
 
@@ -776,9 +777,9 @@
   display: grid;
   gap: 0.72rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid var(--alpha-slate-42);
+  border: 1px solid var(--alpha-brand-22);
   border-radius: 0.9rem;
-  background: var(--alpha-bg-241-75);
+  background: var(--alpha-cyan-240-94);
   padding: 0.8rem;
 }
 
@@ -803,9 +804,9 @@
   gap: 0.52rem;
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--alpha-slate-44);
+  border: 1px solid var(--alpha-brand-22);
   border-radius: 1rem;
-  background: var(--alpha-white-82);
+  background: var(--alpha-bg-241-88);
   padding: 1rem;
 }
 
@@ -842,16 +843,17 @@
 .recipe-tag {
   display: inline-flex;
   border-radius: 999px;
-  border: 1px solid var(--alpha-slate-52);
+  border: 1px solid var(--alpha-brand-22);
   padding: 0.2rem 0.52rem;
   font-size: 0.77rem;
   font-weight: 700;
-  color: var(--color-ink-soft);
-  background: var(--color-bg-base);
+  color: var(--brand-dark);
+  background: var(--alpha-brand-12);
 }
 
 .recipe-tag--source {
-  border-color: var(--alpha-brand-dark-48);
+  border-color: var(--alpha-accent-22);
+  background: var(--alpha-accent-22);
   color: var(--color-brand-dark);
 }
 
@@ -949,10 +951,10 @@
 }
 
 .recipe-ingredient-card {
-  border: 1px solid var(--alpha-slate-42);
+  border: 1px solid var(--alpha-brand-20);
   border-radius: 0.9rem;
   padding: 0.72rem;
-  background: var(--alpha-bg-248-75);
+  background: var(--alpha-bg-241-88);
   display: grid;
   gap: 0.66rem;
 }
@@ -1014,8 +1016,8 @@
   margin: 0;
   padding: 0.75rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--alpha-slate-42);
-  background: var(--alpha-bg-248-75);
+  border: 1px solid var(--alpha-brand-20);
+  background: var(--alpha-bg-241-88);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.65rem;
@@ -1127,9 +1129,9 @@
 }
 
 .meal-day {
-  border: 1px solid var(--alpha-slate-40);
+  border: 1px solid var(--alpha-brand-20);
   border-radius: 0.9rem;
-  background: var(--alpha-bg-248-72);
+  background: var(--alpha-bg-241-88);
   padding: 0.58rem;
   display: grid;
   gap: 0.55rem;
@@ -1160,9 +1162,9 @@
 }
 
 .meal-slot {
-  border: 1px dashed var(--alpha-slate-70);
+  border: 1px dashed var(--alpha-brand-22);
   border-radius: 0.78rem;
-  background: var(--alpha-white-88);
+  background: var(--alpha-white-90);
   padding: 0.5rem;
   display: grid;
   gap: 0.48rem;
@@ -1181,7 +1183,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-muted-soft);
+  color: var(--brand-dark);
 }
 
 .meal-slot__empty {
@@ -1200,8 +1202,8 @@
 
 .meal-chip {
   border-radius: 0.66rem;
-  border: 1px solid var(--alpha-slate-50);
-  background: var(--color-white);
+  border: 1px solid var(--alpha-brand-22);
+  background: var(--alpha-bg-241-88);
   padding: 0.4rem 0.45rem;
   display: grid;
   gap: 0.35rem;
@@ -1277,15 +1279,25 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(100% + 0.42rem);
   z-index: 3;
-  border: 1px solid var(--alpha-slate-50);
+  border: 1px solid var(--alpha-brand-22);
   border-radius: 0.9rem;
-  background: var(--alpha-white-98);
+  background: var(--alpha-cyan-240-94);
   box-shadow: 0 18px 42px var(--alpha-ink-16);
   padding: 0.75rem;
   display: grid;
   gap: 0.58rem;
+  max-height: min(65vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.meal-target-popup--above {
+  bottom: calc(100% + 0.42rem);
+}
+
+.meal-target-popup--below {
+  top: calc(100% + 0.42rem);
 }
 
 .meal-target-popup__title {
@@ -1321,9 +1333,9 @@
 }
 
 .meal-recipe-card {
-  border: 1px solid var(--alpha-slate-44);
+  border: 1px solid var(--alpha-brand-22);
   border-radius: 0.9rem;
-  background: var(--alpha-bg-248-85);
+  background: var(--alpha-bg-241-88);
   padding: 0.72rem;
   display: grid;
   gap: 0.58rem;
