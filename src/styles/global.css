@@ -1,11 +1,121 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
 
 :root {
-  --ink: #0f172a;
-  --muted: #475569;
-  --brand: #0d9488;
-  --brand-dark: #0f766e;
-  --accent: #f97316;
+  --color-ink: #0f172a;
+  --color-ink-strong: #1e293b;
+  --color-ink-soft: #334155;
+  --color-muted: #475569;
+  --color-muted-soft: #64748b;
+  --color-muted-faint: #94a3b8;
+
+  --color-brand: #0d9488;
+  --color-brand-dark: #0f766e;
+  --color-brand-deep: #134e4a;
+  --color-brand-bright: #14b8a6;
+  --color-accent: #f97316;
+  --color-accent-soft: #fb923c;
+  --color-info: #3b82f6;
+  --color-danger: #b91c1c;
+  --color-white: #ffffff;
+
+  --color-bg-base: #f8fafc;
+  --color-bg-aqua: #ecfeff;
+  --color-bg-sky: #eff6ff;
+  --color-bg-cream: #fffef8;
+  --color-bg-warm: #fffbeb;
+
+  --alpha-brand-12: rgba(20, 184, 166, 0.12);
+  --alpha-brand-20: rgba(20, 184, 166, 0.2);
+  --alpha-brand-22: rgba(20, 184, 166, 0.22);
+  --alpha-brand-24: rgba(20, 184, 166, 0.24);
+  --alpha-brand-34: rgba(15, 118, 110, 0.34);
+
+  --alpha-brand-dark-48: rgba(13, 148, 136, 0.48);
+  --alpha-brand-dark-50: rgba(13, 148, 136, 0.5);
+  --alpha-brand-dark-78: rgba(13, 148, 136, 0.78);
+  --alpha-brand-dark-85: rgba(13, 148, 136, 0.85);
+  --alpha-brand-dark-95: rgba(13, 148, 136, 0.95);
+
+  --alpha-slate-33: rgba(148, 163, 184, 0.33);
+  --alpha-slate-36: rgba(148, 163, 184, 0.36);
+  --alpha-slate-38: rgba(148, 163, 184, 0.38);
+  --alpha-slate-40: rgba(148, 163, 184, 0.4);
+  --alpha-slate-42: rgba(148, 163, 184, 0.42);
+  --alpha-slate-44: rgba(148, 163, 184, 0.44);
+  --alpha-slate-45: rgba(148, 163, 184, 0.45);
+  --alpha-slate-50: rgba(148, 163, 184, 0.5);
+  --alpha-slate-52: rgba(148, 163, 184, 0.52);
+  --alpha-slate-60: rgba(148, 163, 184, 0.6);
+  --alpha-slate-62: rgba(148, 163, 184, 0.62);
+  --alpha-slate-70: rgba(148, 163, 184, 0.7);
+  --alpha-slate-light-60: rgba(203, 213, 225, 0.6);
+
+  --alpha-white-74: rgba(255, 255, 255, 0.74);
+  --alpha-white-82: rgba(255, 255, 255, 0.82);
+  --alpha-white-84: rgba(255, 255, 255, 0.84);
+  --alpha-white-85: rgba(255, 255, 255, 0.85);
+  --alpha-white-86: rgba(255, 255, 255, 0.86);
+  --alpha-white-88: rgba(255, 255, 255, 0.88);
+  --alpha-white-90: rgba(255, 255, 255, 0.9);
+  --alpha-white-96: rgba(255, 255, 255, 0.96);
+  --alpha-white-98: rgba(255, 255, 255, 0.98);
+
+  --alpha-bg-241-68: rgba(241, 245, 249, 0.68);
+  --alpha-bg-241-75: rgba(241, 245, 249, 0.75);
+  --alpha-bg-241-78: rgba(241, 245, 249, 0.78);
+  --alpha-bg-241-88: rgba(241, 245, 249, 0.88);
+  --alpha-bg-248-72: rgba(248, 250, 252, 0.72);
+  --alpha-bg-248-75: rgba(248, 250, 252, 0.75);
+  --alpha-bg-248-85: rgba(248, 250, 252, 0.85);
+  --alpha-cyan-240-94: rgba(240, 249, 255, 0.94);
+  --alpha-cyan-240-90: rgba(240, 253, 250, 0.9);
+
+  --alpha-accent-22: rgba(251, 146, 60, 0.22);
+  --alpha-teal-34: rgba(45, 212, 191, 0.34);
+  --alpha-info-20: rgba(59, 130, 246, 0.2);
+
+  --alpha-ink-14: rgba(15, 23, 42, 0.14);
+  --alpha-ink-16: rgba(15, 23, 42, 0.16);
+  --alpha-ink-48: rgba(15, 23, 42, 0.48);
+  --alpha-ink-deep-12: rgba(2, 6, 23, 0.12);
+  --alpha-ink-deep-28: rgba(2, 6, 23, 0.28);
+
+  --gradient-status: linear-gradient(
+    135deg,
+    var(--color-bg-base),
+    var(--color-bg-aqua),
+    var(--color-bg-sky)
+  );
+  --gradient-landing: linear-gradient(
+    160deg,
+    var(--color-bg-cream) 0%,
+    var(--color-bg-aqua) 48%,
+    var(--color-bg-sky) 100%
+  );
+  --gradient-workspace: linear-gradient(
+    145deg,
+    var(--color-bg-base),
+    var(--color-bg-aqua) 45%,
+    var(--color-bg-warm)
+  );
+  --gradient-cta: linear-gradient(
+    120deg,
+    var(--color-brand-deep),
+    var(--color-brand-dark),
+    var(--color-brand)
+  );
+  --gradient-primary-btn: linear-gradient(
+    130deg,
+    var(--color-brand-dark),
+    var(--color-brand),
+    var(--color-accent-soft)
+  );
+
+  --ink: var(--color-ink);
+  --muted: var(--color-muted);
+  --brand: var(--color-brand);
+  --brand-dark: var(--color-brand-dark);
+  --accent: var(--color-accent);
   --font-body: "Manrope", "Segoe UI", sans-serif;
   --font-display: "Space Grotesk", "Segoe UI", sans-serif;
   font-family: var(--font-body);
