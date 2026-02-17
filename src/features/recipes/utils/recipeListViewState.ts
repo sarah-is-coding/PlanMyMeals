@@ -12,6 +12,7 @@ const VALID_SORT_OPTIONS: RecipeSortOption[] = [
 type RecipeListViewState = {
   searchInput: string;
   filters: RecipeListFilters;
+  currentPage: number;
 };
 
 type PartialRecipeListFilters = Partial<RecipeListFilters> & {
@@ -24,14 +25,12 @@ const isValidSortOption = (value: string): value is RecipeSortOption =>
 export const createDefaultRecipeListFilters = (): RecipeListFilters => ({
   sort: "newest",
   tag: "",
-  maxTotalMinutes: "",
   onlyWithSource: false,
 });
 
 const sanitizeFilters = (filters: PartialRecipeListFilters | undefined): RecipeListFilters => ({
   sort: isValidSortOption(filters?.sort ?? "") ? filters!.sort! : "newest",
   tag: (filters?.tag ?? "").trim(),
-  maxTotalMinutes: String(filters?.maxTotalMinutes ?? "").trim(),
   onlyWithSource: Boolean(filters?.onlyWithSource),
 });
 
@@ -40,6 +39,7 @@ export const loadRecipeListViewState = (): RecipeListViewState => {
     return {
       searchInput: "",
       filters: createDefaultRecipeListFilters(),
+      currentPage: 1,
     };
   }
 
@@ -49,22 +49,29 @@ export const loadRecipeListViewState = (): RecipeListViewState => {
       return {
         searchInput: "",
         filters: createDefaultRecipeListFilters(),
+        currentPage: 1,
       };
     }
 
     const parsedState = JSON.parse(savedState) as {
       searchInput?: string;
       filters?: PartialRecipeListFilters;
+      currentPage?: number;
     };
 
     return {
       searchInput: (parsedState.searchInput ?? "").trimStart(),
       filters: sanitizeFilters(parsedState.filters),
+      currentPage:
+        Number.isInteger(parsedState.currentPage) && (parsedState.currentPage ?? 0) > 0
+          ? parsedState.currentPage!
+          : 1,
     };
   } catch {
     return {
       searchInput: "",
       filters: createDefaultRecipeListFilters(),
+      currentPage: 1,
     };
   }
 };

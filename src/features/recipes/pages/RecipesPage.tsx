@@ -8,6 +8,8 @@ import {
   saveRecipeListViewState,
 } from "../utils/recipeListViewState";
 
+const RECIPES_PER_PAGE = 12;
+
 const formatTotalMinutes = (recipe: RecipeSummary): string => {
   const totalMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
   if (totalMinutes <= 0) {
@@ -21,8 +23,10 @@ export default function RecipesPage() {
   const [searchInput, setSearchInput] = useState(initialState.searchInput);
   const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
   const [filters, setFilters] = useState<RecipeListFilters>(initialState.filters);
+  const [currentPage, setCurrentPage] = useState(initialState.currentPage);
   const [showFilters, setShowFilters] = useState(false);
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,8 +34,9 @@ export default function RecipesPage() {
     saveRecipeListViewState({
       searchInput,
       filters,
+      currentPage,
     });
-  }, [searchInput, filters]);
+  }, [searchInput, filters, currentPage]);
 
   useEffect(() => {
     const debounceId = window.setTimeout(() => {
@@ -48,9 +53,17 @@ export default function RecipesPage() {
       setLoading(true);
       setError(null);
       try {
-        const nextRecipes = await listRecipes(searchTerm, filters);
+        const { recipes: nextRecipes, totalCount: nextTotalCount } = await listRecipes(
+          searchTerm,
+          filters,
+          {
+            page: currentPage,
+            pageSize: RECIPES_PER_PAGE,
+          }
+        );
         if (mounted) {
           setRecipes(nextRecipes);
+          setTotalCount(nextTotalCount);
         }
       } catch (fetchError) {
         if (mounted) {
@@ -71,7 +84,17 @@ export default function RecipesPage() {
     return () => {
       mounted = false;
     };
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / RECIPES_PER_PAGE));
+  const pageStartIndex = totalCount === 0 ? 0 : (currentPage - 1) * RECIPES_PER_PAGE + 1;
+  const pageEndIndex = Math.min(currentPage * RECIPES_PER_PAGE, totalCount);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <section className="workspace-route recipe-route">
@@ -87,7 +110,10 @@ export default function RecipesPage() {
               type="search"
               placeholder="Search recipes..."
               value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
+              onChange={(event) => {
+                setSearchInput(event.target.value);
+                setCurrentPage(1);
+              }}
             />
           </label>
           <button
@@ -110,12 +136,13 @@ export default function RecipesPage() {
               <span>Sort</span>
               <select
                 value={filters.sort}
-                onChange={(event) =>
+                onChange={(event) => {
                   setFilters((previousFilters) => ({
                     ...previousFilters,
                     sort: event.target.value as RecipeListFilters["sort"],
-                  }))
-                }
+                  }));
+                  setCurrentPage(1);
+                }}
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
@@ -130,28 +157,13 @@ export default function RecipesPage() {
                 type="text"
                 placeholder="weeknight"
                 value={filters.tag}
-                onChange={(event) =>
+                onChange={(event) => {
                   setFilters((previousFilters) => ({
                     ...previousFilters,
                     tag: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
-            <label className="recipe-field">
-              <span>Max total minutes</span>
-              <input
-                type="number"
-                min={1}
-                inputMode="numeric"
-                value={filters.maxTotalMinutes}
-                onChange={(event) =>
-                  setFilters((previousFilters) => ({
-                    ...previousFilters,
-                    maxTotalMinutes: event.target.value,
-                  }))
-                }
+                  }));
+                  setCurrentPage(1);
+                }}
               />
             </label>
 
@@ -159,12 +171,13 @@ export default function RecipesPage() {
               <input
                 type="checkbox"
                 checked={filters.onlyWithSource}
-                onChange={(event) =>
+                onChange={(event) => {
                   setFilters((previousFilters) => ({
                     ...previousFilters,
                     onlyWithSource: event.target.checked,
-                  }))
-                }
+                  }));
+                  setCurrentPage(1);
+                }}
               />
               <span>Only recipes with source URL</span>
             </label>
@@ -172,7 +185,10 @@ export default function RecipesPage() {
             <button
               type="button"
               className="btn btn--ghost"
-              onClick={() => setFilters(createDefaultRecipeListFilters())}
+              onClick={() => {
+                setFilters(createDefaultRecipeListFilters());
+                setCurrentPage(1);
+              }}
             >
               Reset filters
             </button>
@@ -193,29 +209,62 @@ export default function RecipesPage() {
             <p>Try a different search or add your first recipe.</p>
           </article>
         ) : (
-          <ul className="recipe-list">
-            {recipes.map((recipe) => (
-              <li key={recipe.id}>
-                <Link className="recipe-card" to={`/app/recipes/${recipe.id}`}>
-                  <div className="recipe-card__head">
-                    <h2>{recipe.title}</h2>
-                    <span>{formatTotalMinutes(recipe)}</span>
-                  </div>
-                  {recipe.description ? <p>{recipe.description}</p> : null}
-                  <div className="recipe-card__meta">
-                    {recipe.tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="recipe-tag">
-                        {tag}
-                      </span>
-                    ))}
-                    {recipe.hasSource ? (
-                      <span className="recipe-tag recipe-tag--source">Has source</span>
-                    ) : null}
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="recipe-list">
+              {recipes.map((recipe) => (
+                <li key={recipe.id}>
+                  <Link className="recipe-card" to={`/app/recipes/${recipe.id}`}>
+                    <div className="recipe-card__head">
+                      <h2>{recipe.title}</h2>
+                      <span>{formatTotalMinutes(recipe)}</span>
+                    </div>
+                    {recipe.description ? <p>{recipe.description}</p> : null}
+                    <div className="recipe-card__meta">
+                      {recipe.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="recipe-tag">
+                          {tag}
+                        </span>
+                      ))}
+                      {recipe.hasSource ? (
+                        <span className="recipe-tag recipe-tag--source">Has source</span>
+                      ) : null}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {totalPages > 1 ? (
+              <nav className="recipe-pagination" aria-label="Recipe result pages">
+                <p className="recipe-pagination__summary">
+                  Showing {pageStartIndex}-{pageEndIndex} of {totalCount}
+                </p>
+                <div className="recipe-pagination__controls">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="recipe-pagination__count">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() =>
+                      setCurrentPage((page) => Math.min(totalPages, page + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
+            ) : null}
+          </>
         )}
       </section>
     </section>

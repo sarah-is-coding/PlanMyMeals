@@ -3,7 +3,6 @@ export type RecipeSortOption = "newest" | "oldest" | "title_asc" | "title_desc";
 export type RecipeListFilters = {
   sort: RecipeSortOption;
   tag: string;
-  maxTotalMinutes: string;
   onlyWithSource: boolean;
 };
 

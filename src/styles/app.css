@@ -973,6 +973,31 @@
   flex-wrap: wrap;
 }
 
+.recipe-pagination {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.recipe-pagination__summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.recipe-pagination__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.56rem;
+  flex-wrap: wrap;
+}
+
+.recipe-pagination__count {
+  font-weight: 700;
+  color: #334155;
+}
+
 .recipe-read {
   display: grid;
   gap: 1rem;

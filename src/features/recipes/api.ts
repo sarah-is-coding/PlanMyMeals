@@ -121,14 +121,32 @@ async function requireUserId(): Promise<string> {
   return user.id;
 }
 
+type RecipeListPageInput = {
+  page: number;
+  pageSize: number;
+};
+
+type RecipeListPageResult = {
+  recipes: RecipeSummary[];
+  totalCount: number;
+};
+
 export async function listRecipes(
   searchTerm: string,
-  filters: RecipeListFilters
-): Promise<RecipeSummary[]> {
+  filters: RecipeListFilters,
+  pagination: RecipeListPageInput
+): Promise<RecipeListPageResult> {
+  const safePage = Math.max(1, Math.floor(pagination.page));
+  const safePageSize = Math.max(1, Math.floor(pagination.pageSize));
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+
   let query = supabase
     .from("recipes")
-    .select("id,title,description,prep_minutes,cook_minutes,tags,source_url,created_at")
-    .limit(200);
+    .select("id,title,description,prep_minutes,cook_minutes,tags,source_url,created_at", {
+      count: "exact",
+    })
+    .range(from, to);
 
   const trimmedSearch = searchTerm.trim();
   if (trimmedSearch) {
@@ -160,22 +178,16 @@ export async function listRecipes(
       break;
   }
 
-  const { data, error } = await query.returns<RecipeSummaryRow[]>();
+  const { data, error, count } = await query.returns<RecipeSummaryRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const recipes = (data ?? []).map(mapRecipeSummaryRow);
-  const maxTotalMinutes = Number(filters.maxTotalMinutes);
-  if (!Number.isFinite(maxTotalMinutes) || maxTotalMinutes <= 0) {
-    return recipes;
-  }
-
-  return recipes.filter((recipe) => {
-    const totalMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
-    return totalMinutes <= maxTotalMinutes;
-  });
+  return {
+    recipes: (data ?? []).map(mapRecipeSummaryRow),
+    totalCount: count ?? 0,
+  };
 }
 
 export async function getRecipeById(recipeId: string): Promise<RecipeDetail | null> {

@@ -37,6 +37,7 @@ export default function RecipeReadArticle({ values }: RecipeReadArticleProps) {
   const totalMinutes =
     prepMinutes || cookMinutes ? (prepMinutes ?? 0) + (cookMinutes ?? 0) : null;
   const servings = parseMinutes(values.servings);
+  const hasMeta = Boolean(prepMinutes || cookMinutes || totalMinutes || servings);
   const tags = parseTags(values.tags);
   const ingredients = values.ingredients.filter(
     (ingredient) =>
@@ -50,32 +51,34 @@ export default function RecipeReadArticle({ values }: RecipeReadArticleProps) {
     <article className="workspace-card recipe-read">
       {values.description ? <p className="recipe-read__lede">{values.description}</p> : null}
 
-      <section className="recipe-read__meta" aria-label="Recipe details">
-        {prepMinutes ? (
-          <div>
-            <dt>Prep</dt>
-            <dd>{prepMinutes} min</dd>
-          </div>
-        ) : null}
-        {cookMinutes ? (
-          <div>
-            <dt>Cook</dt>
-            <dd>{cookMinutes} min</dd>
-          </div>
-        ) : null}
-        {totalMinutes ? (
-          <div>
-            <dt>Total</dt>
-            <dd>{totalMinutes} min</dd>
-          </div>
-        ) : null}
-        {servings ? (
-          <div>
-            <dt>Servings</dt>
-            <dd>{servings}</dd>
-          </div>
-        ) : null}
-      </section>
+      {hasMeta ? (
+        <section className="recipe-read__meta" aria-label="Recipe details">
+          {prepMinutes ? (
+            <div>
+              <dt>Prep</dt>
+              <dd>{prepMinutes} min</dd>
+            </div>
+          ) : null}
+          {cookMinutes ? (
+            <div>
+              <dt>Cook</dt>
+              <dd>{cookMinutes} min</dd>
+            </div>
+          ) : null}
+          {totalMinutes ? (
+            <div>
+              <dt>Total</dt>
+              <dd>{totalMinutes} min</dd>
+            </div>
+          ) : null}
+          {servings ? (
+            <div>
+              <dt>Servings</dt>
+              <dd>{servings}</dd>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {tags.length > 0 ? (
         <section className="recipe-read__section">
