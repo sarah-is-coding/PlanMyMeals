@@ -101,7 +101,6 @@ export default function RecipesPage() {
     <section className="workspace-route recipe-route">
       <article className="workspace-card recipe-shell">
         <h1>Recipes</h1>
-        <p>Search your recipe library, filter quickly, or add a new recipe.</p>
 
         <div className="recipe-toolbar">
           <label className="recipe-search" htmlFor="recipe-search-input">

@@ -4,6 +4,7 @@ import type {
   AddMealPlanItemInput,
   MealPlanItem,
   MealPlannerRecipeSummary,
+  MoveMealPlanItemInput,
   MealType,
 } from "./types";
 
@@ -194,4 +195,22 @@ export async function deleteMealPlanItem(itemId: string): Promise<void> {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function moveMealPlanItem(input: MoveMealPlanItemInput): Promise<MealPlanItem> {
+  const { data, error } = await supabase
+    .from("meal_plan_items")
+    .update({
+      planned_for: input.plannedFor,
+      meal_type: input.mealType,
+    })
+    .eq("id", input.itemId)
+    .select("id,recipe_id,planned_for,meal_type,recipes(title)")
+    .single<MealPlanItemRow>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapMealPlanItemRow(data);
 }

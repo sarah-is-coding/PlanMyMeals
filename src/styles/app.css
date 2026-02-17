@@ -1214,7 +1214,7 @@
 }
 
 .meal-chip--clickable {
-  cursor: pointer;
+  cursor: grab;
 }
 
 .meal-chip--clickable:hover,
@@ -1222,6 +1222,14 @@
   border-color: rgba(13, 148, 136, 0.85);
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
   outline: none;
+}
+
+.meal-chip--clickable:active {
+  cursor: grabbing;
+}
+
+.meal-chip--moving {
+  opacity: 0.68;
 }
 
 .meal-chip__remove {

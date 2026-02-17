@@ -29,3 +29,9 @@ export type AddMealPlanItemInput = {
   mealType: MealType;
   recipeId: string;
 };
+
+export type MoveMealPlanItemInput = {
+  itemId: string;
+  plannedFor: string;
+  mealType: MealType;
+};

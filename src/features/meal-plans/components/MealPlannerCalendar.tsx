@@ -1,6 +1,7 @@
 import { useMemo, useState, type DragEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  MEAL_PLAN_ITEM_DRAG_MIME_TYPE,
   MEAL_TYPE_OPTIONS,
   RECIPE_DETAIL_MEAL_PLANNER_STATE,
   RECIPE_DRAG_MIME_TYPE,
@@ -13,9 +14,11 @@ type MealPlannerCalendarProps = {
   items: MealPlanItem[];
   loading: boolean;
   removingItemId: string | null;
+  movingItemId: string | null;
   onShiftWeek: (weekOffset: number) => void;
   onJumpToCurrentWeek: () => void;
   onAssignRecipe: (recipeId: string, plannedFor: string, mealType: MealType) => Promise<void>;
+  onMoveItem: (itemId: string, plannedFor: string, mealType: MealType) => Promise<void>;
   onRemoveItem: (itemId: string) => Promise<void>;
 };
 
@@ -29,9 +32,11 @@ export default function MealPlannerCalendar({
   items,
   loading,
   removingItemId,
+  movingItemId,
   onShiftWeek,
   onJumpToCurrentWeek,
   onAssignRecipe,
+  onMoveItem,
   onRemoveItem,
 }: MealPlannerCalendarProps) {
   const navigate = useNavigate();
@@ -53,9 +58,21 @@ export default function MealPlannerCalendar({
     return map;
   }, [items]);
 
-  const onDropRecipe = (event: DragEvent<HTMLElement>, dayIso: string, mealType: MealType) => {
+  const onDropToSlot = (event: DragEvent<HTMLElement>, dayIso: string, mealType: MealType) => {
     event.preventDefault();
     setDragOverSlotKey(null);
+
+    let mealPlanItemId = event.dataTransfer.getData(MEAL_PLAN_ITEM_DRAG_MIME_TYPE);
+    if (!mealPlanItemId) {
+      const plainTextPayload = event.dataTransfer.getData("text/plain");
+      if (plainTextPayload.startsWith("meal-plan-item:")) {
+        mealPlanItemId = plainTextPayload.replace("meal-plan-item:", "");
+      }
+    }
+    if (mealPlanItemId) {
+      void onMoveItem(mealPlanItemId, dayIso, mealType);
+      return;
+    }
 
     const recipeId =
       event.dataTransfer.getData(RECIPE_DRAG_MIME_TYPE) ||
@@ -120,11 +137,15 @@ export default function MealPlannerCalendar({
                     className={`meal-slot${isDropTarget ? " meal-slot--active" : ""}`}
                     onDragOver={(event) => {
                       event.preventDefault();
-                      event.dataTransfer.dropEffect = "copy";
+                      const dragTypes = Array.from(event.dataTransfer.types);
+                      const isMealPlanItemDrag = dragTypes.includes(
+                        MEAL_PLAN_ITEM_DRAG_MIME_TYPE
+                      );
+                      event.dataTransfer.dropEffect = isMealPlanItemDrag ? "move" : "copy";
                     }}
                     onDragEnter={() => setDragOverSlotKey(slotKey)}
                     onDragLeave={() => setDragOverSlotKey((current) => (current === slotKey ? null : current))}
-                    onDrop={(event) => onDropRecipe(event, day.dateIso, option.value)}
+                    onDrop={(event) => onDropToSlot(event, day.dateIso, option.value)}
                     aria-label={`${option.label} on ${day.fullLabel}`}
                   >
                     <div className="meal-slot__title">{option.label}</div>
@@ -135,7 +156,7 @@ export default function MealPlannerCalendar({
                         {slotItems.map((item) => (
                           <li
                             key={item.id}
-                            className={`meal-chip${item.recipeId ? " meal-chip--clickable" : ""}`}
+                            className={`meal-chip${item.recipeId ? " meal-chip--clickable" : ""}${movingItemId === item.id ? " meal-chip--moving" : ""}`}
                             onClick={() => openRecipeDetail(item.recipeId)}
                             onKeyDown={(event) => {
                               if (!item.recipeId) {
@@ -148,6 +169,12 @@ export default function MealPlannerCalendar({
                             }}
                             role={item.recipeId ? "link" : undefined}
                             tabIndex={item.recipeId ? 0 : undefined}
+                            draggable
+                            onDragStart={(event) => {
+                              event.dataTransfer.setData(MEAL_PLAN_ITEM_DRAG_MIME_TYPE, item.id);
+                              event.dataTransfer.setData("text/plain", `meal-plan-item:${item.id}`);
+                              event.dataTransfer.effectAllowed = "move";
+                            }}
                           >
                             <span>{item.recipeTitle}</span>
                             <button
@@ -157,7 +184,7 @@ export default function MealPlannerCalendar({
                                 event.stopPropagation();
                                 void onRemoveItem(item.id);
                               }}
-                              disabled={removingItemId === item.id}
+                              disabled={removingItemId === item.id || movingItemId === item.id}
                               aria-label={`Remove ${item.recipeTitle}`}
                             >
                               Remove

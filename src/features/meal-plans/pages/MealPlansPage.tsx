@@ -3,6 +3,7 @@ import {
   addMealPlanItem,
   deleteMealPlanItem,
   listMealPlanItemsForWeek,
+  moveMealPlanItem,
   searchPlannerRecipes,
 } from "../api";
 import MealPlannerCalendar from "../components/MealPlannerCalendar";
@@ -35,6 +36,7 @@ export default function MealPlansPage() {
   const [loadingItems, setLoadingItems] = useState(true);
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
+  const [movingItemId, setMovingItemId] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState(initialState.searchInput);
   const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
@@ -184,6 +186,37 @@ export default function MealPlansPage() {
     }
   }, []);
 
+  const handleMoveItem = useCallback(
+    async (itemId: string, plannedFor: string, mealType: MealType) => {
+      const existingItem = items.find((item) => item.id === itemId);
+      if (!existingItem) {
+        return;
+      }
+      if (existingItem.plannedFor === plannedFor && existingItem.mealType === mealType) {
+        return;
+      }
+
+      setMovingItemId(itemId);
+      setPlannerError(null);
+
+      try {
+        const movedItem = await moveMealPlanItem({
+          itemId,
+          plannedFor,
+          mealType,
+        });
+        setItems((currentItems) =>
+          currentItems.map((item) => (item.id === itemId ? movedItem : item))
+        );
+      } catch (error) {
+        setPlannerError(error instanceof Error ? error.message : "Failed to move recipe.");
+      } finally {
+        setMovingItemId((currentId) => (currentId === itemId ? null : currentId));
+      }
+    },
+    [items]
+  );
+
   return (
     <section className="workspace-route meal-planner-route">
       {plannerError ? <p className="error">{plannerError}</p> : null}
@@ -195,11 +228,13 @@ export default function MealPlansPage() {
           items={items}
           loading={loadingItems}
           removingItemId={removingItemId}
+          movingItemId={movingItemId}
           onShiftWeek={(weekOffset) =>
             setWeekStartIso((currentIso) => shiftWeekStartIso(currentIso, weekOffset))
           }
           onJumpToCurrentWeek={() => setWeekStartIso(getWeekStartIso(new Date()))}
           onAssignRecipe={handleAssignRecipe}
+          onMoveItem={handleMoveItem}
           onRemoveItem={handleRemoveItem}
         />
 
