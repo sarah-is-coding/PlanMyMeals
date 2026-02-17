@@ -19,6 +19,10 @@ import {
 } from "../dateUtils";
 import type { MealPlanItem, MealPlannerRecipeSummary, MealType } from "../types";
 import {
+  loadCachedMealPlanItems,
+  saveCachedMealPlanItems,
+} from "../utils/mealPlanItemsCache";
+import {
   loadMealPlannerViewState,
   saveMealPlannerViewState,
 } from "../utils/mealPlannerViewState";
@@ -33,10 +37,13 @@ export default function MealPlansPage() {
       selectedMealType: DEFAULT_MEAL_TYPE,
     });
   });
+  const [initialCachedItems] = useState<MealPlanItem[] | null>(() =>
+    loadCachedMealPlanItems(initialState.weekStartIso)
+  );
   const [weekStartIso, setWeekStartIso] = useState(initialState.weekStartIso);
-  const [items, setItems] = useState<MealPlanItem[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
-  const [hasLoadedInitialItems, setHasLoadedInitialItems] = useState(false);
+  const [items, setItems] = useState<MealPlanItem[]>(initialCachedItems ?? []);
+  const [loadingItems, setLoadingItems] = useState(initialCachedItems === null);
+  const [hasLoadedInitialItems, setHasLoadedInitialItems] = useState(initialCachedItems !== null);
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
@@ -86,6 +93,12 @@ export default function MealPlansPage() {
 
   useEffect(() => {
     let mounted = true;
+    const cachedItems = loadCachedMealPlanItems(weekStartIso);
+
+    setItems(cachedItems ?? []);
+    if (cachedItems) {
+      setHasLoadedInitialItems(true);
+    }
 
     const run = async () => {
       setLoadingItems(true);
@@ -95,6 +108,7 @@ export default function MealPlansPage() {
         const nextItems = await listMealPlanItemsForWeek(weekStartIso);
         if (mounted) {
           setItems(nextItems);
+          saveCachedMealPlanItems(weekStartIso, nextItems);
         }
       } catch (error) {
         if (mounted) {
@@ -170,7 +184,11 @@ export default function MealPlansPage() {
           mealType,
           recipeId,
         });
-        setItems((currentItems) => [...currentItems, addedItem]);
+        setItems((currentItems) => {
+          const nextItems = [...currentItems, addedItem];
+          saveCachedMealPlanItems(weekStartIso, nextItems);
+          return nextItems;
+        });
       } catch (error) {
         setPlannerError(error instanceof Error ? error.message : "Failed to add recipe.");
       } finally {
@@ -186,13 +204,17 @@ export default function MealPlansPage() {
 
     try {
       await deleteMealPlanItem(itemId);
-      setItems((currentItems) => currentItems.filter((item) => item.id !== itemId));
+      setItems((currentItems) => {
+        const nextItems = currentItems.filter((item) => item.id !== itemId);
+        saveCachedMealPlanItems(weekStartIso, nextItems);
+        return nextItems;
+      });
     } catch (error) {
       setPlannerError(error instanceof Error ? error.message : "Failed to remove item.");
     } finally {
       setRemovingItemId((currentId) => (currentId === itemId ? null : currentId));
     }
-  }, []);
+  }, [weekStartIso]);
 
   const handleMoveItem = useCallback(
     async (itemId: string, plannedFor: string, mealType: MealType) => {
@@ -213,16 +235,18 @@ export default function MealPlansPage() {
           plannedFor,
           mealType,
         });
-        setItems((currentItems) =>
-          currentItems.map((item) => (item.id === itemId ? movedItem : item))
-        );
+        setItems((currentItems) => {
+          const nextItems = currentItems.map((item) => (item.id === itemId ? movedItem : item));
+          saveCachedMealPlanItems(weekStartIso, nextItems);
+          return nextItems;
+        });
       } catch (error) {
         setPlannerError(error instanceof Error ? error.message : "Failed to move recipe.");
       } finally {
         setMovingItemId((currentId) => (currentId === itemId ? null : currentId));
       }
     },
-    [items]
+    [items, weekStartIso]
   );
 
   return (

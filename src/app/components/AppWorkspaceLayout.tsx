@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import AdSlot from "../../components/ads/AdSlot";
 import LoadingModal from "../../components/feedback/LoadingModal";
 import { authService } from "../../features/auth/services/authService";
+import { clearMealPlanItemsCache } from "../../features/meal-plans/utils/mealPlanItemsCache";
 import { clearRecipeListViewState } from "../../features/recipes/utils/recipeListViewState";
 
 const appNavItems = [
@@ -29,6 +30,8 @@ export default function AppWorkspaceLayout() {
     const { error: signOutError } = await authService.signOut();
     if (signOutError) {
       setError(signOutError.message);
+    } else {
+      clearMealPlanItemsCache();
     }
     setLoading(false);
   };
