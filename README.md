@@ -10,7 +10,7 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 ## Running Locally (Contributors)
 - Create a Supabase project (free tier)
 - Copy your project's URL + anon/public key into `.env` (reference `.env.example`)
-- Apply `supabase/schema.sql` to seed the database
+- Apply `supabase/migrations/schema.sql` to seed the database
 - Run the app
 
 ## Project Structure
