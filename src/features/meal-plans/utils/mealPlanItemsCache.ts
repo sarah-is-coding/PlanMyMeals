@@ -22,6 +22,16 @@ const isIsoDate = (value: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(value);
 const isValidMealType = (value: string): value is MealType =>
   VALID_MEAL_TYPES.includes(value as MealType);
 
+const isNullablePositiveInteger = (value: unknown): value is number | null => {
+  if (value === null) {
+    return true;
+  }
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return false;
+  }
+  return Number.isInteger(value) && value > 0;
+};
+
 const isValidMealPlanItem = (value: unknown): value is MealPlanItem => {
   if (!value || typeof value !== "object") {
     return false;
@@ -42,6 +52,23 @@ const isValidMealPlanItem = (value: unknown): value is MealPlanItem => {
   }
 
   if (!candidate.plannedFor || !isIsoDate(candidate.plannedFor)) {
+    return false;
+  }
+
+  if (!isNullablePositiveInteger(candidate.servingsOverride)) {
+    return false;
+  }
+
+  if (!isNullablePositiveInteger(candidate.recipeServings)) {
+    return false;
+  }
+
+  if (!isNullablePositiveInteger(candidate.effectiveServings)) {
+    return false;
+  }
+
+  const computedEffectiveServings = candidate.servingsOverride ?? candidate.recipeServings;
+  if (candidate.effectiveServings !== computedEffectiveServings) {
     return false;
   }
 

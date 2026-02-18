@@ -14,15 +14,32 @@ type MealPlannerCalendarProps = {
   items: MealPlanItem[];
   removingItemId: string | null;
   movingItemId: string | null;
+  updatingServingsItemId: string | null;
   onShiftWeek: (weekOffset: number) => void;
   onJumpToCurrentWeek: () => void;
-  onAssignRecipe: (recipeId: string, plannedFor: string, mealType: MealType) => Promise<void>;
+  onAssignRecipe: (
+    recipeId: string,
+    plannedFor: string,
+    mealType: MealType,
+    servingsOverride: number | null
+  ) => Promise<void>;
   onMoveItem: (itemId: string, plannedFor: string, mealType: MealType) => Promise<void>;
+  onUpdateItemServings: (itemId: string, servingsOverride: number | null) => Promise<void>;
   onRemoveItem: (itemId: string) => Promise<void>;
 };
 
 function getSlotKey(dayIso: string, mealType: MealType): string {
   return `${dayIso}:${mealType}`;
+}
+
+function getServingsOverride(
+  nextEffectiveServings: number,
+  recipeServings: number | null
+): number | null {
+  if (recipeServings !== null && nextEffectiveServings === recipeServings) {
+    return null;
+  }
+  return nextEffectiveServings;
 }
 
 export default function MealPlannerCalendar({
@@ -31,10 +48,12 @@ export default function MealPlannerCalendar({
   items,
   removingItemId,
   movingItemId,
+  updatingServingsItemId,
   onShiftWeek,
   onJumpToCurrentWeek,
   onAssignRecipe,
   onMoveItem,
+  onUpdateItemServings,
   onRemoveItem,
 }: MealPlannerCalendarProps) {
   const navigate = useNavigate();
@@ -80,16 +99,20 @@ export default function MealPlannerCalendar({
       return;
     }
 
-    void onAssignRecipe(recipeId, dayIso, mealType);
+    void onAssignRecipe(recipeId, dayIso, mealType, null);
   };
 
-  const openRecipeDetail = (recipeId: string | null) => {
-    if (!recipeId) {
+  const openRecipeDetail = (item: MealPlanItem) => {
+    if (!item.recipeId) {
       return;
     }
 
-    navigate(`/app/recipes/${recipeId}`, {
-      state: RECIPE_DETAIL_MEAL_PLANNER_STATE,
+    navigate(`/app/recipes/${item.recipeId}`, {
+      state: {
+        ...RECIPE_DETAIL_MEAL_PLANNER_STATE,
+        mealPlanItemId: item.id,
+        initialServings: item.effectiveServings,
+      },
     });
   };
 
@@ -159,14 +182,17 @@ export default function MealPlannerCalendar({
                           <li
                             key={item.id}
                             className={`meal-chip${item.recipeId ? " meal-chip--clickable" : ""}${movingItemId === item.id ? " meal-chip--moving" : ""}`}
-                            onClick={() => openRecipeDetail(item.recipeId)}
+                            onClick={() => openRecipeDetail(item)}
                             onKeyDown={(event) => {
+                              if (event.target !== event.currentTarget) {
+                                return;
+                              }
                               if (!item.recipeId) {
                                 return;
                               }
                               if (event.key === "Enter" || event.key === " ") {
                                 event.preventDefault();
-                                openRecipeDetail(item.recipeId);
+                                openRecipeDetail(item);
                               }
                             }}
                             role={item.recipeId ? "link" : undefined}
@@ -179,6 +205,81 @@ export default function MealPlannerCalendar({
                             }}
                           >
                             <span>{item.recipeTitle}</span>
+                            <div className="meal-chip__servings">
+                              <span>Servings</span>
+                              <div className="servings-stepper servings-stepper--compact">
+                                <button
+                                  type="button"
+                                  className="btn btn--ghost servings-stepper__button"
+                                  aria-label={`Decrease servings for ${item.recipeTitle}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    if (
+                                      updatingServingsItemId === item.id ||
+                                      movingItemId === item.id ||
+                                      removingItemId === item.id ||
+                                      !item.effectiveServings ||
+                                      item.effectiveServings <= 1
+                                    ) {
+                                      return;
+                                    }
+                                    const nextEffectiveServings = item.effectiveServings - 1;
+                                    void onUpdateItemServings(
+                                      item.id,
+                                      getServingsOverride(
+                                        nextEffectiveServings,
+                                        item.recipeServings
+                                      )
+                                    );
+                                  }}
+                                  disabled={
+                                    updatingServingsItemId === item.id ||
+                                    movingItemId === item.id ||
+                                    removingItemId === item.id ||
+                                    !item.effectiveServings ||
+                                    item.effectiveServings <= 1
+                                  }
+                                >
+                                  -
+                                </button>
+                                <span className="servings-stepper__value">
+                                  {item.effectiveServings ?? "-"}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn btn--ghost servings-stepper__button"
+                                  aria-label={`Increase servings for ${item.recipeTitle}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    if (
+                                      updatingServingsItemId === item.id ||
+                                      movingItemId === item.id ||
+                                      removingItemId === item.id
+                                    ) {
+                                      return;
+                                    }
+                                    const nextEffectiveServings = Math.max(
+                                      1,
+                                      (item.effectiveServings ?? 0) + 1
+                                    );
+                                    void onUpdateItemServings(
+                                      item.id,
+                                      getServingsOverride(
+                                        nextEffectiveServings,
+                                        item.recipeServings
+                                      )
+                                    );
+                                  }}
+                                  disabled={
+                                    updatingServingsItemId === item.id ||
+                                    movingItemId === item.id ||
+                                    removingItemId === item.id
+                                  }
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
                             <button
                               type="button"
                               className="meal-chip__remove"
@@ -186,7 +287,11 @@ export default function MealPlannerCalendar({
                                 event.stopPropagation();
                                 void onRemoveItem(item.id);
                               }}
-                              disabled={removingItemId === item.id || movingItemId === item.id}
+                              disabled={
+                                removingItemId === item.id ||
+                                movingItemId === item.id ||
+                                updatingServingsItemId === item.id
+                              }
                               aria-label={`Remove ${item.recipeTitle}`}
                             >
                               Remove

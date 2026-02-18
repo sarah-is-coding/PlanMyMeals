@@ -57,6 +57,7 @@ create table if not exists public.meal_plan_items (
   recipe_id uuid references public.recipes on delete set null,
   planned_for date not null,
   meal_type text check (meal_type in ('breakfast','lunch','dinner','other')),
+  servings_override int check (servings_override is null or servings_override > 0),
   notes text,
   created_at timestamptz default now()
 );

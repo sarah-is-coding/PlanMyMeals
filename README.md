@@ -36,6 +36,6 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 - `recipes`: id, user_id, title, description, source_url, prep_minutes, cook_minutes, servings, tags (text[]), instructions (text); text-first to minimize storage.
 - `recipe_ingredients`: id, recipe_id, ingredient_name, quantity, unit, notes; no global ingredient catalog to avoid bloat.
 - `meal_plans`: id, user_id, title, start_date, notes; container for saved plans.
-- `meal_plan_items`: id, meal_plan_id, recipe_id, planned_for (date), meal_type (breakfast/lunch/dinner/other), notes.
+- `meal_plan_items`: id, meal_plan_id, recipe_id, planned_for (date), meal_type (breakfast/lunch/dinner/other), servings_override (nullable), notes.
 - `grocery_lists`: id, user_id, meal_plan_id (nullable), title, created_at; can be generated from a plan or ad hoc.
 - `grocery_items`: id, list_id, ingredient_name, quantity, unit, is_checked; keeps lists editable on mobile.

@@ -19,7 +19,12 @@ type RecipeAssignmentPanelProps = {
   onSearchInputChange: (value: string) => void;
   onSelectedDayChange: (value: string) => void;
   onSelectedMealTypeChange: (value: MealType) => void;
-  onAssignRecipe: (recipeId: string, plannedFor: string, mealType: MealType) => Promise<void>;
+  onAssignRecipe: (
+    recipeId: string,
+    plannedFor: string,
+    mealType: MealType,
+    servingsOverride: number | null
+  ) => Promise<void>;
 };
 
 const formatTotalMinutes = (recipe: MealPlannerRecipeSummary): string => {
@@ -31,6 +36,33 @@ const formatTotalMinutes = (recipe: MealPlannerRecipeSummary): string => {
 };
 
 const DESCRIPTION_PREVIEW_MAX_CHARS = 72;
+
+const parsePositiveServings = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return Math.round(parsed);
+};
+
+const getServingsOverride = (
+  selectedServings: number | null,
+  recipeServings: number | null
+): number | null => {
+  if (recipeServings === null) {
+    return selectedServings;
+  }
+  if (selectedServings === null || selectedServings === recipeServings) {
+    return null;
+  }
+  return selectedServings;
+};
 
 const formatDescriptionPreview = (description: string | null): string | null => {
   const normalized = (description ?? "").replace(/\s+/g, " ").trim();
@@ -64,8 +96,10 @@ export default function RecipeAssignmentPanel({
   const [isTargetPopupOpen, setIsTargetPopupOpen] = useState(false);
   const [pendingRecipeId, setPendingRecipeId] = useState<string | null>(null);
   const [pendingRecipeTitle, setPendingRecipeTitle] = useState("");
+  const [pendingRecipeServings, setPendingRecipeServings] = useState<number | null>(null);
   const [draftDay, setDraftDay] = useState(selectedDay);
   const [draftMealType, setDraftMealType] = useState<MealType>(selectedMealType);
+  const [draftServings, setDraftServings] = useState("");
   const [popupPlacement, setPopupPlacement] = useState<"above" | "below">("above");
   const [popupMaxHeightPx, setPopupMaxHeightPx] = useState<number | null>(null);
   const targetAnchorRef = useRef<HTMLDivElement | null>(null);
@@ -103,16 +137,20 @@ export default function RecipeAssignmentPanel({
     setIsTargetPopupOpen(false);
     setPendingRecipeId(null);
     setPendingRecipeTitle("");
+    setPendingRecipeServings(null);
     setDraftDay(selectedDay);
     setDraftMealType(selectedMealType);
+    setDraftServings("");
     setPopupMaxHeightPx(null);
   };
 
   const openTargetPopup = (recipe: MealPlannerRecipeSummary) => {
     setPendingRecipeId(recipe.id);
     setPendingRecipeTitle(recipe.title);
+    setPendingRecipeServings(recipe.servings);
     setDraftDay(selectedDay || weekDays[0]?.dateIso || "");
     setDraftMealType(selectedMealType);
+    setDraftServings(recipe.servings ? String(recipe.servings) : "");
     setPopupPlacement("above");
     setPopupMaxHeightPx(null);
     setIsTargetPopupOpen(true);
@@ -123,14 +161,21 @@ export default function RecipeAssignmentPanel({
       return;
     }
 
+    const selectedServings = parsePositiveServings(draftServings);
+    const servingsOverride = getServingsOverride(selectedServings, pendingRecipeServings);
+
     onSelectedDayChange(draftDay);
     onSelectedMealTypeChange(draftMealType);
-    await onAssignRecipe(pendingRecipeId, draftDay, draftMealType);
+    await onAssignRecipe(pendingRecipeId, draftDay, draftMealType, servingsOverride);
     closeTargetPopup();
   };
 
+  const draftServingsValue = parsePositiveServings(draftServings);
+  const draftServingsOverride = getServingsOverride(draftServingsValue, pendingRecipeServings);
   const popupAssignmentKey =
-    pendingRecipeId && draftDay ? `${pendingRecipeId}|${draftDay}|${draftMealType}` : null;
+    pendingRecipeId && draftDay
+      ? `${pendingRecipeId}|${draftDay}|${draftMealType}|${draftServingsOverride ?? "base"}`
+      : null;
 
   const openRecipeDetail = (recipeId: string) => {
     navigate(`/app/recipes/${recipeId}`, {
@@ -159,13 +204,6 @@ export default function RecipeAssignmentPanel({
       window.removeEventListener("resize", handleViewportChange);
       window.removeEventListener("scroll", handleViewportChange, true);
     };
-  }, [isTargetPopupOpen, updateTargetPopupLayout]);
-
-  useEffect(() => {
-    if (!isTargetPopupOpen) {
-      return;
-    }
-    updateTargetPopupLayout();
   }, [isTargetPopupOpen, pendingRecipeTitle, updateTargetPopupLayout]);
 
   return (
@@ -209,6 +247,57 @@ export default function RecipeAssignmentPanel({
                   </option>
                 ))}
               </select>
+            </label>
+
+            <label className="recipe-field">
+              <span>Servings</span>
+              <div className="servings-stepper servings-stepper--compact">
+                <button
+                  type="button"
+                  className="btn btn--ghost servings-stepper__button"
+                  aria-label="Decrease servings"
+                  onClick={() =>
+                    setDraftServings((currentValue) => {
+                      const parsed = parsePositiveServings(currentValue);
+                      if (parsed === null || parsed <= 1) {
+                        return currentValue;
+                      }
+                      return String(parsed - 1);
+                    })
+                  }
+                  disabled={!draftServingsValue || draftServingsValue <= 1}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  value={draftServings}
+                  onChange={(event) => setDraftServings(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn--ghost servings-stepper__button"
+                  aria-label="Increase servings"
+                  onClick={() =>
+                    setDraftServings((currentValue) => {
+                      const parsed = parsePositiveServings(currentValue);
+                      if (parsed === null) {
+                        return "1";
+                      }
+                      return String(parsed + 1);
+                    })
+                  }
+                >
+                  +
+                </button>
+              </div>
+              {pendingRecipeServings ? (
+                <small className="servings-stepper__hint">
+                  Recipe default: {pendingRecipeServings}
+                </small>
+              ) : null}
             </label>
 
             <div className="meal-target-popup__actions">
@@ -264,6 +353,9 @@ export default function RecipeAssignmentPanel({
                     draggable
                     onClick={() => openRecipeDetail(recipe.id)}
                     onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) {
+                        return;
+                      }
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         openRecipeDetail(recipe.id);
@@ -279,7 +371,10 @@ export default function RecipeAssignmentPanel({
                   >
                     <div className="meal-recipe-card__head">
                       <h3>{recipe.title}</h3>
-                      <span>{formatTotalMinutes(recipe)}</span>
+                      <span>
+                        {formatTotalMinutes(recipe)}
+                        {recipe.servings ? ` • ${recipe.servings} servings` : ""}
+                      </span>
                     </div>
                     {descriptionPreview ? (
                       <p className="meal-recipe-card__description">{descriptionPreview}</p>

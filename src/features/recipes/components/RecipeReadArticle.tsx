@@ -1,7 +1,11 @@
 import type { RecipeFormValues } from "../utils/recipeForm";
+import { scaleQuantityText } from "../utils/ingredientScaling";
 
 type RecipeReadArticleProps = {
   values: RecipeFormValues;
+  baseServings: number | null;
+  viewServings: number | null;
+  onViewServingsChange: (nextServings: number | null) => void;
 };
 
 const parseTags = (value: string): string[] =>
@@ -31,13 +35,24 @@ const formatIngredientLine = (
   return chunks.length > 0 ? chunks.join(" ") : "Unnamed ingredient";
 };
 
-export default function RecipeReadArticle({ values }: RecipeReadArticleProps) {
+export default function RecipeReadArticle({
+  values,
+  baseServings,
+  viewServings,
+  onViewServingsChange,
+}: RecipeReadArticleProps) {
   const prepMinutes = parseMinutes(values.prepMinutes);
   const cookMinutes = parseMinutes(values.cookMinutes);
   const totalMinutes =
     prepMinutes || cookMinutes ? (prepMinutes ?? 0) + (cookMinutes ?? 0) : null;
-  const servings = parseMinutes(values.servings);
-  const hasMeta = Boolean(prepMinutes || cookMinutes || totalMinutes || servings);
+  const persistedServings = parseMinutes(values.servings);
+  const persistedBaseServings = baseServings ?? persistedServings;
+  const displayedServings = viewServings ?? persistedBaseServings;
+  const canAdjustServings = Boolean(persistedBaseServings);
+  const hasMeta = Boolean(prepMinutes || cookMinutes || totalMinutes || displayedServings);
+  const isScaledView =
+    Boolean(persistedBaseServings && displayedServings) &&
+    persistedBaseServings !== displayedServings;
   const tags = parseTags(values.tags);
   const ingredients = values.ingredients.filter(
     (ingredient) =>
@@ -71,14 +86,68 @@ export default function RecipeReadArticle({ values }: RecipeReadArticleProps) {
               <dd>{totalMinutes} min</dd>
             </div>
           ) : null}
-          {servings ? (
+          {displayedServings ? (
             <div>
               <dt>Servings</dt>
-              <dd>{servings}</dd>
+              <dd>{displayedServings}</dd>
             </div>
           ) : null}
         </section>
       ) : null}
+
+      <section className="recipe-read__section recipe-read__servings">
+        <h2>View Servings</h2>
+        <div className="servings-stepper">
+          <button
+            type="button"
+            className="btn btn--ghost servings-stepper__button"
+            aria-label="Decrease view servings"
+            onClick={() => {
+              if (!canAdjustServings) {
+                return;
+              }
+              if (!displayedServings || displayedServings <= 1) {
+                return;
+              }
+              onViewServingsChange(displayedServings - 1);
+            }}
+            disabled={!canAdjustServings || !displayedServings || displayedServings <= 1}
+          >
+            -
+          </button>
+          <span className="servings-stepper__value">{displayedServings ?? "-"}</span>
+          <button
+            type="button"
+            className="btn btn--ghost servings-stepper__button"
+            aria-label="Increase view servings"
+            onClick={() => {
+              if (!canAdjustServings) {
+                return;
+              }
+              onViewServingsChange(Math.max(1, (displayedServings ?? 0) + 1));
+            }}
+            disabled={!canAdjustServings}
+          >
+            +
+          </button>
+          {persistedBaseServings && isScaledView ? (
+            <button
+              type="button"
+              className="btn btn--ghost servings-stepper__reset"
+              onClick={() => onViewServingsChange(persistedBaseServings)}
+            >
+              Reset to {persistedBaseServings}
+            </button>
+          ) : null}
+        </div>
+        {persistedBaseServings ? (
+          <p className="servings-stepper__hint">Recipe base servings: {persistedBaseServings}</p>
+        ) : (
+          <p className="servings-stepper__hint">
+            Set recipe servings in edit mode to enable ingredient scaling.
+          </p>
+        )}
+      </section>
 
       {tags.length > 0 ? (
         <section className="recipe-read__section">
@@ -117,7 +186,17 @@ export default function RecipeReadArticle({ values }: RecipeReadArticleProps) {
           <ul className="recipe-read__ingredients">
             {ingredients.map((ingredient) => (
               <li key={ingredient.id}>
-                <p>{formatIngredientLine(ingredient.quantity, ingredient.unit, ingredient.ingredientName)}</p>
+                <p>
+                  {formatIngredientLine(
+                    scaleQuantityText(
+                      ingredient.quantity,
+                      persistedBaseServings,
+                      displayedServings
+                    ),
+                    ingredient.unit,
+                    ingredient.ingredientName
+                  )}
+                </p>
                 {ingredient.notes.trim() ? (
                   <p className="recipe-read__note">{ingredient.notes.trim()}</p>
                 ) : null}

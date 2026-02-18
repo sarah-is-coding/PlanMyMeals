@@ -6,6 +6,7 @@ import type {
   MealPlannerRecipeSummary,
   MoveMealPlanItemInput,
   MealType,
+  UpdateMealPlanItemServingsInput,
 } from "./types";
 
 type MealPlanRow = {
@@ -18,25 +19,40 @@ type RecipeSearchRow = {
   description: string | null;
   prep_minutes: number | null;
   cook_minutes: number | null;
+  servings: number | null;
 };
 
-type RecipeTitleRelation = { title: string } | Array<{ title: string }> | null;
+type RecipeRelationRow = {
+  title: string;
+  servings: number | null;
+};
+
+type RecipeRelation = RecipeRelationRow | RecipeRelationRow[] | null;
 
 type MealPlanItemRow = {
   id: string;
   recipe_id: string | null;
   planned_for: string;
   meal_type: MealType | "other";
-  recipes: RecipeTitleRelation;
+  servings_override: number | null;
+  recipes: RecipeRelation;
 };
 
 const MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner"];
 
-function getRecipeTitle(relation: RecipeTitleRelation): string {
+function getRecipeRelationValue(relation: RecipeRelation): RecipeRelationRow | null {
   if (Array.isArray(relation)) {
-    return relation[0]?.title ?? "Untitled recipe";
+    return relation[0] ?? null;
   }
-  return relation?.title ?? "Untitled recipe";
+  return relation;
+}
+
+function getRecipeTitle(relation: RecipeRelation): string {
+  return getRecipeRelationValue(relation)?.title ?? "Untitled recipe";
+}
+
+function getRecipeServings(relation: RecipeRelation): number | null {
+  return getRecipeRelationValue(relation)?.servings ?? null;
 }
 
 function mapRecipeSearchRow(row: RecipeSearchRow): MealPlannerRecipeSummary {
@@ -46,6 +62,7 @@ function mapRecipeSearchRow(row: RecipeSearchRow): MealPlannerRecipeSummary {
     description: row.description,
     prepMinutes: row.prep_minutes,
     cookMinutes: row.cook_minutes,
+    servings: row.servings,
   };
 }
 
@@ -54,6 +71,9 @@ function mapMealPlanItemRow(row: MealPlanItemRow): MealPlanItem {
     throw new Error("Unsupported meal type on meal plan item.");
   }
   const mealType = row.meal_type as MealType;
+  const recipeServings = getRecipeServings(row.recipes);
+  const servingsOverride = row.servings_override;
+  const effectiveServings = servingsOverride ?? recipeServings;
 
   return {
     id: row.id,
@@ -61,6 +81,9 @@ function mapMealPlanItemRow(row: MealPlanItemRow): MealPlanItem {
     recipeTitle: getRecipeTitle(row.recipes),
     plannedFor: row.planned_for,
     mealType,
+    servingsOverride,
+    recipeServings,
+    effectiveServings,
   };
 }
 
@@ -128,7 +151,7 @@ export async function searchPlannerRecipes(
   const safeLimit = Math.max(1, Math.min(24, Math.floor(limit)));
   let query = supabase
     .from("recipes")
-    .select("id,title,description,prep_minutes,cook_minutes")
+    .select("id,title,description,prep_minutes,cook_minutes,servings")
     .order("created_at", { ascending: false })
     .limit(safeLimit);
 
@@ -154,7 +177,7 @@ export async function listMealPlanItemsForWeek(weekStartIso: string): Promise<Me
   const weekEndIso = getWeekEndIso(weekStartIso);
   const { data, error } = await supabase
     .from("meal_plan_items")
-    .select("id,recipe_id,planned_for,meal_type,recipes(title)")
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
     .eq("meal_plan_id", mealPlanId)
     .gte("planned_for", weekStartIso)
     .lte("planned_for", weekEndIso)
@@ -179,8 +202,9 @@ export async function addMealPlanItem(input: AddMealPlanItemInput): Promise<Meal
       recipe_id: input.recipeId,
       planned_for: input.plannedFor,
       meal_type: input.mealType,
+      servings_override: input.servingsOverride,
     })
-    .select("id,recipe_id,planned_for,meal_type,recipes(title)")
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
     .single<MealPlanItemRow>();
 
   if (error) {
@@ -205,7 +229,26 @@ export async function moveMealPlanItem(input: MoveMealPlanItemInput): Promise<Me
       meal_type: input.mealType,
     })
     .eq("id", input.itemId)
-    .select("id,recipe_id,planned_for,meal_type,recipes(title)")
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
+    .single<MealPlanItemRow>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapMealPlanItemRow(data);
+}
+
+export async function updateMealPlanItemServings(
+  input: UpdateMealPlanItemServingsInput
+): Promise<MealPlanItem> {
+  const { data, error } = await supabase
+    .from("meal_plan_items")
+    .update({
+      servings_override: input.servingsOverride,
+    })
+    .eq("id", input.itemId)
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
     .single<MealPlanItemRow>();
 
   if (error) {

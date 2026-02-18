@@ -13,6 +13,7 @@ export type MealPlannerRecipeSummary = {
   description: string | null;
   prepMinutes: number | null;
   cookMinutes: number | null;
+  servings: number | null;
 };
 
 export type MealPlanItem = {
@@ -21,6 +22,9 @@ export type MealPlanItem = {
   recipeTitle: string;
   plannedFor: string;
   mealType: MealType;
+  servingsOverride: number | null;
+  recipeServings: number | null;
+  effectiveServings: number | null;
 };
 
 export type AddMealPlanItemInput = {
@@ -28,10 +32,16 @@ export type AddMealPlanItemInput = {
   plannedFor: string;
   mealType: MealType;
   recipeId: string;
+  servingsOverride: number | null;
 };
 
 export type MoveMealPlanItemInput = {
   itemId: string;
   plannedFor: string;
   mealType: MealType;
+};
+
+export type UpdateMealPlanItemServingsInput = {
+  itemId: string;
+  servingsOverride: number | null;
 };

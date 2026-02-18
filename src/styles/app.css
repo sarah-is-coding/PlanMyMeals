@@ -983,6 +983,59 @@
   background: var(--alpha-bg-241-68);
 }
 
+.servings-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.servings-stepper input {
+  width: 4.2rem;
+  text-align: center;
+  border: 1px solid var(--alpha-slate-62);
+  background: var(--color-white);
+  border-radius: 0.7rem;
+  padding: 0.45rem 0.5rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.servings-stepper__button {
+  min-width: 2.05rem;
+  min-height: 2.05rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.servings-stepper__value {
+  min-width: 2.1rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.servings-stepper__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.servings-stepper__reset {
+  margin-left: 0.2rem;
+}
+
+.servings-stepper--compact .servings-stepper__button {
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+}
+
+.servings-stepper--compact .servings-stepper__value {
+  min-width: 1.9rem;
+  font-size: 0.92rem;
+}
+
 .recipe-ingredients {
   display: grid;
   gap: 0.75rem;
@@ -1030,6 +1083,26 @@
   display: flex;
   gap: 0.56rem;
   flex-wrap: wrap;
+}
+
+.recipe-scale-tools {
+  border: 1px solid var(--alpha-brand-20);
+  border-radius: 0.9rem;
+  background: var(--alpha-bg-241-88);
+  padding: 0.72rem;
+  display: grid;
+  gap: 0.52rem;
+}
+
+.recipe-scale-tools h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+}
+
+.recipe-scale-tools p {
+  margin: 0;
+  color: var(--muted);
 }
 
 .recipe-pagination {
@@ -1108,6 +1181,10 @@
 .recipe-read__section {
   display: grid;
   gap: 0.55rem;
+}
+
+.recipe-read__servings .servings-stepper {
+  gap: 0.5rem;
 }
 
 .recipe-read__section h2 {
@@ -1271,10 +1348,24 @@
   gap: 0.35rem;
 }
 
-.meal-chip span {
+.meal-chip > span {
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--color-ink-strong);
+}
+
+.meal-chip__servings {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: start;
+}
+
+.meal-chip__servings > span {
+  color: var(--color-muted-soft);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 .meal-chip--clickable {

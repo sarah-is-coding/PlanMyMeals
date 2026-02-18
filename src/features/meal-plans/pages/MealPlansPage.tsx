@@ -7,6 +7,7 @@ import {
   listMealPlanItemsForWeek,
   moveMealPlanItem,
   searchPlannerRecipes,
+  updateMealPlanItemServings,
 } from "../api";
 import MealPlannerCalendar from "../components/MealPlannerCalendar";
 import RecipeAssignmentPanel from "../components/RecipeAssignmentPanel";
@@ -47,6 +48,7 @@ export default function MealPlansPage() {
   const [plannerError, setPlannerError] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
+  const [updatingServingsItemId, setUpdatingServingsItemId] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState(initialState.searchInput);
   const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
@@ -168,12 +170,17 @@ export default function MealPlansPage() {
   }, [searchTerm]);
 
   const handleAssignRecipe = useCallback(
-    async (recipeId: string, plannedFor: string, mealType: MealType) => {
+    async (
+      recipeId: string,
+      plannedFor: string,
+      mealType: MealType,
+      servingsOverride: number | null
+    ) => {
       if (!plannedFor) {
         return;
       }
 
-      const nextAssigningKey = `${recipeId}|${plannedFor}|${mealType}`;
+      const nextAssigningKey = `${recipeId}|${plannedFor}|${mealType}|${servingsOverride ?? "base"}`;
       setAssigningKey(nextAssigningKey);
       setPlannerError(null);
 
@@ -183,6 +190,7 @@ export default function MealPlansPage() {
           plannedFor,
           mealType,
           recipeId,
+          servingsOverride,
         });
         setItems((currentItems) => {
           const nextItems = [...currentItems, addedItem];
@@ -249,6 +257,37 @@ export default function MealPlansPage() {
     [items, weekStartIso]
   );
 
+  const handleUpdateItemServings = useCallback(
+    async (itemId: string, servingsOverride: number | null) => {
+      const existingItem = items.find((item) => item.id === itemId);
+      if (!existingItem || existingItem.servingsOverride === servingsOverride) {
+        return;
+      }
+
+      setUpdatingServingsItemId(itemId);
+      setPlannerError(null);
+
+      try {
+        const updatedItem = await updateMealPlanItemServings({
+          itemId,
+          servingsOverride,
+        });
+        setItems((currentItems) => {
+          const nextItems = currentItems.map((item) =>
+            item.id === itemId ? updatedItem : item
+          );
+          saveCachedMealPlanItems(weekStartIso, nextItems);
+          return nextItems;
+        });
+      } catch (error) {
+        setPlannerError(error instanceof Error ? error.message : "Failed to update servings.");
+      } finally {
+        setUpdatingServingsItemId((currentId) => (currentId === itemId ? null : currentId));
+      }
+    },
+    [items, weekStartIso]
+  );
+
   return (
     <section className="workspace-route meal-planner-route">
       <LoadingModal
@@ -265,12 +304,14 @@ export default function MealPlansPage() {
           items={items}
           removingItemId={removingItemId}
           movingItemId={movingItemId}
+          updatingServingsItemId={updatingServingsItemId}
           onShiftWeek={(weekOffset) =>
             setWeekStartIso((currentIso) => shiftWeekStartIso(currentIso, weekOffset))
           }
           onJumpToCurrentWeek={() => setWeekStartIso(getWeekStartIso(new Date()))}
           onAssignRecipe={handleAssignRecipe}
           onMoveItem={handleMoveItem}
+          onUpdateItemServings={handleUpdateItemServings}
           onRemoveItem={handleRemoveItem}
         />
 
