@@ -50,9 +50,23 @@ export async function createIngredient(
     throw new Error("Ingredient name is required.");
   }
 
+  const { data: existingIngredient, error: existingError } = await supabase
+    .from("ingredients")
+    .select("id,name,category,default_unit")
+    .eq("name", normalized)
+    .maybeSingle<IngredientRow>();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (existingIngredient) {
+    return mapIngredientRow(existingIngredient);
+  }
+
   const { data, error } = await supabase
     .from("ingredients")
-    .upsert({ name: normalized, category }, { onConflict: "name" })
+    .insert({ name: normalized, category })
     .select("id,name,category,default_unit")
     .single<IngredientRow>();
 

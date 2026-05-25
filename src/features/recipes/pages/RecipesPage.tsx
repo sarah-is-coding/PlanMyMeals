@@ -26,6 +26,7 @@ export default function RecipesPage() {
   const [filters, setFilters] = useState<RecipeListFilters>(initialState.filters);
   const [currentPage, setCurrentPage] = useState(initialState.currentPage);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -141,14 +142,42 @@ export default function RecipesPage() {
           >
             Filters
           </button>
-          <Link
-            className="btn btn--primary"
-            to="/app/recipes/new"
-            state={{ prefillTitle: searchInput.trim() }}
-            onClick={() => clearRecipeListViewState()}
-          >
-            Add Recipe
-          </Link>
+          <div className="recipe-add-menu">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => setShowAddMenu((currentState) => !currentState)}
+              aria-expanded={showAddMenu}
+              aria-controls="recipe-add-menu"
+            >
+              Add Recipe
+            </button>
+            {showAddMenu ? (
+              <div
+                id="recipe-add-menu"
+                className="recipe-add-menu__panel"
+                role="menu"
+              >
+                <Link
+                  className="recipe-add-menu__item"
+                  to="/app/recipes/new"
+                  state={{ prefillTitle: searchInput.trim() }}
+                  role="menuitem"
+                  onClick={() => clearRecipeListViewState()}
+                >
+                  Add Recipe
+                </Link>
+                <Link
+                  className="recipe-add-menu__item"
+                  to="/app/recipes/import"
+                  role="menuitem"
+                  onClick={() => clearRecipeListViewState()}
+                >
+                  Import Recipe
+                </Link>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {showFilters ? (

@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
+import { createIngredient } from "../ingredients/api";
 import { parseQuantityNumber } from "./utils/ingredientScaling";
 import type {
   RecipeDetail,
@@ -84,6 +85,14 @@ const cleanText = (value: string | null | undefined): string | null => {
   return normalized.length > 0 ? normalized : null;
 };
 
+const getFriendlyRecipeError = (error: { code?: string; message: string }): string => {
+  if (error.code === "23505" || error.message.includes("duplicate key")) {
+    return "A recipe with that title already exists. Rename it and try again.";
+  }
+
+  return error.message;
+};
+
 const getRecipePayload = (input: RecipeUpsertInput, userId: string) => ({
   user_id: userId,
   title: input.title.trim(),
@@ -96,27 +105,37 @@ const getRecipePayload = (input: RecipeUpsertInput, userId: string) => ({
   instructions: cleanText(input.instructions),
 });
 
-const getIngredientPayload = (recipeId: string, input: RecipeUpsertInput) =>
-  input.ingredients
-    .map((ingredient) => {
+const getIngredientPayload = async (recipeId: string, input: RecipeUpsertInput) => {
+  const payload = await Promise.all(
+    input.ingredients.map(async (ingredient) => {
+      const ingredientName = ingredient.ingredientName.trim();
+      const ingredientId = ingredient.ingredientId
+        ? ingredient.ingredientId
+        : ingredientName
+          ? (await createIngredient(ingredientName)).id
+          : "";
       const quantityText = cleanText(ingredient.quantity);
       const quantityNumeric = quantityText
         ? parseQuantityNumber(quantityText)
         : null;
       return {
         recipe_id: recipeId,
-        ingredient_id: ingredient.ingredientId,
-        ingredient_name: ingredient.ingredientName.trim(),
+        ingredient_id: ingredientId,
+        ingredient_name: ingredientName,
         quantity: quantityText,
         quantity_numeric: quantityNumeric,
         unit: cleanText(ingredient.unit),
         notes: cleanText(ingredient.notes),
       };
     })
+  );
+
+  return payload
     .filter(
       (ingredient) =>
         ingredient.ingredient_name.length > 0 && ingredient.ingredient_id
     );
+};
 
 async function requireUserId(): Promise<string> {
   const {
@@ -214,7 +233,7 @@ export async function getRecipeById(recipeId: string): Promise<RecipeDetail | nu
     .maybeSingle<RecipeDetailRow>();
 
   if (recipeError) {
-    throw new Error(recipeError.message);
+    throw new Error(getFriendlyRecipeError(recipeError));
   }
 
   if (!recipeRow) {
@@ -248,10 +267,10 @@ export async function createRecipe(input: RecipeUpsertInput): Promise<string> {
     .single<RecipeIdRow>();
 
   if (recipeError) {
-    throw new Error(recipeError.message);
+    throw new Error(getFriendlyRecipeError(recipeError));
   }
 
-  const ingredientPayload = getIngredientPayload(recipeRow.id, input);
+  const ingredientPayload = await getIngredientPayload(recipeRow.id, input);
   if (ingredientPayload.length > 0) {
     const { error: ingredientError } = await supabase
       .from("recipe_ingredients")
@@ -289,7 +308,7 @@ export async function updateRecipe(recipeId: string, input: RecipeUpsertInput): 
     throw new Error(deleteIngredientsError.message);
   }
 
-  const ingredientPayload = getIngredientPayload(recipeId, input);
+  const ingredientPayload = await getIngredientPayload(recipeId, input);
   if (ingredientPayload.length === 0) {
     return;
   }

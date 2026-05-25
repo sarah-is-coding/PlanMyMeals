@@ -10,8 +10,14 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 ## Running Locally (Contributors)
 - Create a Supabase project (free tier)
 - Copy your project's URL + anon/public key into `.env` (reference `.env.example`)
+- Add `GEMINI_API_KEY` to Supabase function secrets before using AI recipe import
 - Apply `supabase/migrations/schema.sql` to seed the database
 - Run the app
+
+## AI Recipe Import
+- The Add Recipe screen can extract one or many recipe drafts from pasted notes, recipe URLs, or both.
+- Extraction runs through the Supabase Edge Function at `supabase/functions/import-recipes`, keeping `GEMINI_API_KEY` server-side.
+- Deploy the function with Supabase and set the secret with `supabase secrets set GEMINI_API_KEY=...`.
 
 ## Project Structure
 - `src/app`: app shell, routes, and top-level pages

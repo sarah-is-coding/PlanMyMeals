@@ -6,6 +6,7 @@ import MealPlansPage from "../features/meal-plans/pages/MealPlansPage";
 import SavedMealPlansPage from "../features/meal-plans/pages/SavedMealPlansPage";
 import RecipeCreatePage from "../features/recipes/pages/RecipeCreatePage";
 import RecipeDetailPage from "../features/recipes/pages/RecipeDetailPage";
+import RecipeImportPage from "../features/recipes/pages/RecipeImportPage";
 import RecipesPage from "../features/recipes/pages/RecipesPage";
 import AppWorkspaceLayout from "./components/AppWorkspaceLayout";
 import AppHomePage from "./pages/AppHomePage";
@@ -40,6 +41,7 @@ export default function AppRouter({ session, authReady }: AppRouterProps) {
           <Route index element={<AppHomePage />} />
           <Route path="recipes" element={<RecipesPage />} />
           <Route path="recipes/new" element={<RecipeCreatePage />} />
+          <Route path="recipes/import" element={<RecipeImportPage />} />
           <Route path="recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="meal-plans" element={<MealPlansPage />} />
           <Route path="saved-meal-plans" element={<SavedMealPlansPage />} />

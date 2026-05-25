@@ -2,17 +2,20 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import RecipeFormFields from "../components/RecipeFormFields";
 import { createRecipe } from "../api";
+import type { ImportedRecipe } from "../importTypes";
 import {
   createEmptyIngredient,
   createEmptyRecipeFormValues,
   mapRecipeFormValuesToInput,
   type RecipeFormValues,
 } from "../utils/recipeForm";
+import { mapImportedRecipeToFormValues } from "../utils/recipeImport";
 
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
 type RecipeIngredientFieldName = "quantity" | "unit" | "notes";
 
 type RecipeCreateLocationState = {
+  importedRecipe?: ImportedRecipe;
   prefillTitle?: string;
 };
 
@@ -21,6 +24,10 @@ export default function RecipeCreatePage() {
   const navigate = useNavigate();
   const locationState = (location.state ?? null) as RecipeCreateLocationState | null;
   const [values, setValues] = useState<RecipeFormValues>(() => {
+    if (locationState?.importedRecipe) {
+      return mapImportedRecipeToFormValues(locationState.importedRecipe);
+    }
+
     const initialValues = createEmptyRecipeFormValues();
     const prefillTitle = locationState?.prefillTitle?.trim() ?? "";
     if (!prefillTitle) {

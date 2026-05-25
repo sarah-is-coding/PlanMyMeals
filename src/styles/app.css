@@ -784,6 +784,39 @@
   flex-wrap: wrap;
 }
 
+.recipe-add-menu {
+  position: relative;
+}
+
+.recipe-add-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 20;
+  min-width: 12rem;
+  border: 1px solid var(--alpha-brand-22);
+  border-radius: 0.75rem;
+  background: var(--color-white);
+  box-shadow: var(--shadow-soft);
+  padding: 0.35rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.recipe-add-menu__item {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0.55rem;
+  padding: 0.62rem 0.72rem;
+  font-weight: 700;
+}
+
+.recipe-add-menu__item:hover,
+.recipe-add-menu__item:focus-visible {
+  background: var(--alpha-brand-12);
+  outline: none;
+}
+
 .recipe-search {
   position: relative;
   flex: 1 1 280px;
@@ -895,6 +928,96 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.44rem;
+}
+
+.recipe-import {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.recipe-import__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.recipe-import__header h2 {
+  margin: 0;
+}
+
+.recipe-import__model {
+  border: 1px solid var(--alpha-brand-22);
+  border-radius: 999px;
+  padding: 0.26rem 0.55rem;
+  color: var(--color-brand-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.recipe-import__actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.recipe-import__warnings {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-muted);
+}
+
+.recipe-import__results {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.recipe-import-card {
+  border: 1px solid var(--alpha-brand-22);
+  border-radius: 0.9rem;
+  background: var(--alpha-bg-241-88);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.recipe-import-card__select {
+  justify-self: start;
+}
+
+.recipe-import-card__body {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.recipe-import-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.recipe-import-card__head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.recipe-import-card__head span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.recipe-import-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.recipe-import-card__warning {
+  font-size: 0.85rem;
 }
 
 .recipe-tag {

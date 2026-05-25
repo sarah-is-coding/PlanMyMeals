@@ -14,8 +14,8 @@ vi.mock("../../../lib/supabaseClient", () => {
   const chainedMethods = [
     "from",
     "select",
-    "upsert",
     "insert",
+    "eq",
     "ilike",
     "order",
     "limit",
@@ -29,6 +29,7 @@ vi.mock("../../../lib/supabaseClient", () => {
   // Terminal methods are reconfigured per-test via mockResolvedValue
   builder.returns = vi.fn().mockResolvedValue({ data: [], error: null });
   builder.single = vi.fn().mockResolvedValue({ data: null, error: null });
+  builder.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
 
   return { supabase: builder };
 });
@@ -137,9 +138,10 @@ describe("createIngredient", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    for (const fn of ["from", "select", "upsert"]) {
+    for (const fn of ["from", "select", "insert", "eq"]) {
       db[fn].mockReturnValue(db);
     }
+    db.maybeSingle.mockResolvedValue({ data: null, error: null });
     db.single.mockResolvedValue({ data: createdRow, error: null });
   });
 
@@ -157,40 +159,49 @@ describe("createIngredient", () => {
     expect(db.from).not.toHaveBeenCalled();
   });
 
-  it("upserts on the ingredients table", async () => {
+  it("checks the ingredients table for an existing name before inserting", async () => {
     await createIngredient("garlic");
     expect(db.from).toHaveBeenCalledWith("ingredients");
-    expect(db.upsert).toHaveBeenCalled();
+    expect(db.eq).toHaveBeenCalledWith("name", "garlic");
+    expect(db.maybeSingle).toHaveBeenCalled();
   });
 
   it("normalises the name to lowercase before inserting", async () => {
     await createIngredient("Chicken Breast");
-    const [payload] = db.upsert.mock.calls[0] as [{ name: string }];
+    const [payload] = db.insert.mock.calls[0] as [{ name: string }];
     expect(payload.name).toBe("chicken breast");
   });
 
   it("trims surrounding whitespace from the name", async () => {
     await createIngredient("  garlic  ");
-    const [payload] = db.upsert.mock.calls[0] as [{ name: string }];
+    const [payload] = db.insert.mock.calls[0] as [{ name: string }];
     expect(payload.name).toBe("garlic");
   });
 
   it("uses 'other' as the default category when none is supplied", async () => {
     await createIngredient("garlic");
-    const [payload] = db.upsert.mock.calls[0] as [{ category: string }];
+    const [payload] = db.insert.mock.calls[0] as [{ category: string }];
     expect(payload.category).toBe("other");
   });
 
   it("passes the supplied category through", async () => {
     await createIngredient("garlic", "produce");
-    const [payload] = db.upsert.mock.calls[0] as [{ category: string }];
+    const [payload] = db.insert.mock.calls[0] as [{ category: string }];
     expect(payload.category).toBe("produce");
   });
 
-  it("uses name as the upsert conflict key so duplicates do not throw", async () => {
-    await createIngredient("garlic");
-    const [, options] = db.upsert.mock.calls[0] as [unknown, { onConflict: string }];
-    expect(options.onConflict).toBe("name");
+  it("returns an existing ingredient without inserting", async () => {
+    db.maybeSingle.mockResolvedValue({ data: createdRow, error: null });
+
+    const result = await createIngredient("garlic", "produce");
+
+    expect(db.insert).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      id: "new-id",
+      name: "garlic",
+      category: "produce",
+      defaultUnit: null,
+    });
   });
 
   it("returns a mapped Ingredient from the database row", async () => {
