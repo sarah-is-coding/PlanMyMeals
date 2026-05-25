@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npx tsc *)",
       "Bash(supabase --version)",
-      "Bash(Get-Date -Format \"yyyyMMddHHmmss\")"
+      "Bash(Get-Date -Format \"yyyyMMddHHmmss\")",
+      "Bash(git commit --amend -m 'canonical ingredients table, combobox, and test suite *)",
+      "Bash(npm test *)",
+      "Bash(git commit *)"
     ]
   }
 }

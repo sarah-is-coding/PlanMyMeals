@@ -930,7 +930,34 @@
 
 .recipe-form {
   display: grid;
-  gap: 0.95rem;
+  gap: 0.85rem;
+}
+
+/* ── Form sections (Basics / Details / Instructions / Ingredients) ── */
+.recipe-form__section {
+  background: var(--color-white);
+  border: 1px solid var(--alpha-slate-38);
+  border-left: 3px solid var(--color-brand);
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem 1.1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.recipe-form__section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-brand-dark);
+}
+
+/* Ingredients section has a slightly different accent to distinguish it */
+.recipe-form__section--ingredients {
+  border-left-color: var(--color-brand-dark);
+  background: var(--alpha-bg-241-68);
 }
 
 .recipe-form__grid {
@@ -1036,23 +1063,12 @@
   font-size: 0.92rem;
 }
 
-.recipe-ingredients {
-  display: grid;
-  gap: 0.75rem;
-}
-
 .recipe-ingredients__header {
   display: flex;
   justify-content: space-between;
   gap: 0.7rem;
   align-items: center;
   flex-wrap: wrap;
-}
-
-.recipe-ingredients__header h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.14rem;
 }
 
 .recipe-ingredients__list {
