@@ -2,6 +2,7 @@ import type { Session } from "@supabase/supabase-js";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "../features/auth/AuthPage";
 import GroceryPage from "../features/grocery/pages/GroceryPage";
+import SavedGroceryListsPage from "../features/grocery/pages/SavedGroceryListsPage";
 import MealPlansPage from "../features/meal-plans/pages/MealPlansPage";
 import SavedMealPlansPage from "../features/meal-plans/pages/SavedMealPlansPage";
 import RecipeCreatePage from "../features/recipes/pages/RecipeCreatePage";
@@ -48,6 +49,7 @@ export default function AppRouter({ session, authReady }: AppRouterProps) {
           <Route path="meal-plans" element={<MealPlansPage />} />
           <Route path="saved-meal-plans" element={<SavedMealPlansPage />} />
           <Route path="grocery" element={<GroceryPage />} />
+          <Route path="saved-grocery-lists" element={<SavedGroceryListsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
