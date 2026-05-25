@@ -93,6 +93,7 @@ export default function RecipeAssignmentPanel({
 }: RecipeAssignmentPanelProps) {
   const navigate = useNavigate();
   const hasSearchInput = searchInput.trim().length > 0;
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isTargetPopupOpen, setIsTargetPopupOpen] = useState(false);
   const [pendingRecipeId, setPendingRecipeId] = useState<string | null>(null);
   const [pendingRecipeTitle, setPendingRecipeTitle] = useState("");
@@ -208,11 +209,21 @@ export default function RecipeAssignmentPanel({
 
   return (
     <article className="workspace-card meal-recipe-panel">
-      <header className="meal-recipe-panel__header">
-        <h2>Find recipes</h2>
-      </header>
+      <button
+        type="button"
+        className="past-plan-panel__toggle"
+        onClick={() => setIsPanelOpen((prev) => !prev)}
+        aria-expanded={isPanelOpen}
+      >
+        <span className="past-plan-panel__toggle-label">Find recipes</span>
+        <span className="past-plan-panel__chevron" aria-hidden="true">
+          {isPanelOpen ? "▲" : "▼"}
+        </span>
+      </button>
 
-      <div className="meal-recipe-panel__target-anchor" ref={targetAnchorRef}>
+      {isPanelOpen && (
+        <>
+        <div className="meal-recipe-panel__target-anchor" ref={targetAnchorRef}>
         {isTargetPopupOpen ? (
           <section
             ref={targetPopupRef}
@@ -397,6 +408,8 @@ export default function RecipeAssignmentPanel({
           </ul>
         )}
       </section>
+        </>
+      )}
     </article>
   );
 }

@@ -45,3 +45,8 @@ export type UpdateMealPlanItemServingsInput = {
   itemId: string;
   servingsOverride: number | null;
 };
+
+export type MealPlanDayPreview = {
+  dateIso: string;
+  recipes: string[];
+};

@@ -1,7 +1,8 @@
 import { supabase } from "../../lib/supabaseClient";
-import { getWeekEndIso } from "./dateUtils";
+import { getWeekEndIso, toIsoDate } from "./dateUtils";
 import type {
   AddMealPlanItemInput,
+  MealPlanDayPreview,
   MealPlanItem,
   MealPlannerRecipeSummary,
   MoveMealPlanItemInput,
@@ -11,6 +12,7 @@ import type {
 
 type MealPlanRow = {
   id: string;
+  end_date: string | null;
 };
 
 type RecipeSearchRow = {
@@ -104,10 +106,10 @@ async function requireUserId(): Promise<string> {
   return user.id;
 }
 
-async function getMealPlanIdForWeek(weekStartIso: string): Promise<string | null> {
+async function getMealPlanForWeek(weekStartIso: string): Promise<MealPlanRow | null> {
   const { data, error } = await supabase
     .from("meal_plans")
-    .select("id")
+    .select("id,end_date")
     .eq("start_date", weekStartIso)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -117,13 +119,13 @@ async function getMealPlanIdForWeek(weekStartIso: string): Promise<string | null
     throw new Error(error.message);
   }
 
-  return data?.id ?? null;
+  return data ?? null;
 }
 
 async function ensureMealPlanIdForWeek(weekStartIso: string): Promise<string> {
-  const existingId = await getMealPlanIdForWeek(weekStartIso);
-  if (existingId) {
-    return existingId;
+  const existing = await getMealPlanForWeek(weekStartIso);
+  if (existing) {
+    return existing.id;
   }
 
   const userId = await requireUserId();
@@ -133,8 +135,9 @@ async function ensureMealPlanIdForWeek(weekStartIso: string): Promise<string> {
       user_id: userId,
       title: `Week of ${weekStartIso}`,
       start_date: weekStartIso,
+      end_date: getWeekEndIso(weekStartIso), // 7-day default; update when UI supports custom lengths
     })
-    .select("id")
+    .select("id,end_date")
     .single<MealPlanRow>();
 
   if (error) {
@@ -169,18 +172,20 @@ export async function searchPlannerRecipes(
 }
 
 export async function listMealPlanItemsForWeek(weekStartIso: string): Promise<MealPlanItem[]> {
-  const mealPlanId = await getMealPlanIdForWeek(weekStartIso);
-  if (!mealPlanId) {
+  const plan = await getMealPlanForWeek(weekStartIso);
+  if (!plan) {
     return [];
   }
 
-  const weekEndIso = getWeekEndIso(weekStartIso);
+  // Use the plan's stored end_date; fall back to computed +6 for legacy rows
+  // that pre-date the end_date column.
+  const endIso = plan.end_date ?? getWeekEndIso(weekStartIso);
   const { data, error } = await supabase
     .from("meal_plan_items")
     .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
-    .eq("meal_plan_id", mealPlanId)
+    .eq("meal_plan_id", plan.id)
     .gte("planned_for", weekStartIso)
-    .lte("planned_for", weekEndIso)
+    .lte("planned_for", endIso)
     .in("meal_type", MEAL_TYPES)
     .order("planned_for", { ascending: true })
     .order("created_at", { ascending: true })
@@ -239,6 +244,44 @@ export async function moveMealPlanItem(input: MoveMealPlanItemInput): Promise<Me
   return mapMealPlanItemRow(data);
 }
 
+type PreviewItemRow = {
+  planned_for: string;
+  recipes: RecipeRelation;
+};
+
+export async function previewMealPlanWeek(weekStartIso: string): Promise<MealPlanDayPreview[]> {
+  const plan = await getMealPlanForWeek(weekStartIso);
+  if (!plan) {
+    return [];
+  }
+
+  const endIso = plan.end_date ?? getWeekEndIso(weekStartIso);
+  const { data, error } = await supabase
+    .from("meal_plan_items")
+    .select("planned_for,recipes(title)")
+    .eq("meal_plan_id", plan.id)
+    .gte("planned_for", weekStartIso)
+    .lte("planned_for", endIso)
+    .order("planned_for", { ascending: true })
+    .order("created_at", { ascending: true })
+    .returns<PreviewItemRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  // Group recipe titles by date
+  const byDate = new Map<string, string[]>();
+  for (const row of data ?? []) {
+    const title = getRecipeTitle(row.recipes);
+    const list = byDate.get(row.planned_for) ?? [];
+    list.push(title);
+    byDate.set(row.planned_for, list);
+  }
+
+  return Array.from(byDate.entries()).map(([dateIso, recipes]) => ({ dateIso, recipes }));
+}
+
 export async function updateMealPlanItemServings(
   input: UpdateMealPlanItemServingsInput
 ): Promise<MealPlanItem> {
@@ -256,4 +299,66 @@ export async function updateMealPlanItemServings(
   }
 
   return mapMealPlanItemRow(data);
+}
+
+// ── Copy a whole week's plan to another week ───────────────────────────────
+// Shifts each item by the same weekday index so Mon→Mon, Tue→Tue, etc.
+// Adds on top of any existing items in the target week (no items are removed).
+
+function addDaysIso(isoDate: string, days: number): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  // Local-time Date constructor so DST doesn't shift the day
+  return toIsoDate(new Date(y, m - 1, d + days));
+}
+
+function daysBetweenIso(startIso: string, endIso: string): number {
+  const [sy, sm, sd] = startIso.split("-").map(Number);
+  const [ey, em, ed] = endIso.split("-").map(Number);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  return Math.round(
+    (new Date(ey, em - 1, ed).getTime() - new Date(sy, sm - 1, sd).getTime()) / msPerDay
+  );
+}
+
+type CopyItemInsert = {
+  meal_plan_id: string;
+  recipe_id: string | null;
+  planned_for: string;
+  meal_type: MealType;
+  servings_override: number | null;
+};
+
+export async function copyWeekPlan(
+  sourceWeekStartIso: string,
+  targetWeekStartIso: string
+): Promise<MealPlanItem[]> {
+  const sourceItems = await listMealPlanItemsForWeek(sourceWeekStartIso);
+  if (sourceItems.length === 0) {
+    return [];
+  }
+
+  const targetMealPlanId = await ensureMealPlanIdForWeek(targetWeekStartIso);
+
+  const inserts: CopyItemInsert[] = sourceItems.map((item) => {
+    const dayIndex = daysBetweenIso(sourceWeekStartIso, item.plannedFor);
+    return {
+      meal_plan_id: targetMealPlanId,
+      recipe_id: item.recipeId,
+      planned_for: addDaysIso(targetWeekStartIso, dayIndex),
+      meal_type: item.mealType,
+      servings_override: item.servingsOverride,
+    };
+  });
+
+  const { data, error } = await supabase
+    .from("meal_plan_items")
+    .insert(inserts)
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
+    .returns<MealPlanItemRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map(mapMealPlanItemRow);
 }

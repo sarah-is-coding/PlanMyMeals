@@ -3,6 +3,7 @@ import LoadingModal from "../../../components/feedback/LoadingModal";
 import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
   addMealPlanItem,
+  copyWeekPlan,
   deleteMealPlanItem,
   listMealPlanItemsForWeek,
   moveMealPlanItem,
@@ -10,6 +11,7 @@ import {
   updateMealPlanItemServings,
 } from "../api";
 import MealPlannerCalendar from "../components/MealPlannerCalendar";
+import PastMealPlanPanel from "../components/PastMealPlanPanel";
 import RecipeAssignmentPanel from "../components/RecipeAssignmentPanel";
 import { DEFAULT_MEAL_TYPE } from "../constants";
 import {
@@ -257,6 +259,21 @@ export default function MealPlansPage() {
     [items, weekStartIso]
   );
 
+  const handleCopyWeekToCurrentWeek = useCallback(
+    async (sourceWeekStartIso: string) => {
+      setPlannerError(null);
+      const newItems = await copyWeekPlan(sourceWeekStartIso, weekStartIso);
+      if (newItems.length > 0) {
+        setItems((current) => {
+          const next = [...current, ...newItems];
+          saveCachedMealPlanItems(weekStartIso, next);
+          return next;
+        });
+      }
+    },
+    [weekStartIso]
+  );
+
   const handleUpdateItemServings = useCallback(
     async (itemId: string, servingsOverride: number | null) => {
       const existingItem = items.find((item) => item.id === itemId);
@@ -315,20 +332,27 @@ export default function MealPlansPage() {
           onRemoveItem={handleRemoveItem}
         />
 
-        <RecipeAssignmentPanel
-          recipes={recipes}
-          searchInput={searchInput}
-          loading={loadingRecipes}
-          error={searchError}
-          selectedDay={selectedDay}
-          selectedMealType={selectedMealType}
-          weekDays={weekDays}
-          assigningKey={assigningKey}
-          onSearchInputChange={setSearchInput}
-          onSelectedDayChange={setSelectedDay}
-          onSelectedMealTypeChange={setSelectedMealType}
-          onAssignRecipe={handleAssignRecipe}
-        />
+        <div className="meal-planner-sidebar">
+          <PastMealPlanPanel
+            currentWeekStartIso={weekStartIso}
+            onJumpToWeek={setWeekStartIso}
+            onCopyToCurrentWeek={handleCopyWeekToCurrentWeek}
+          />
+          <RecipeAssignmentPanel
+            recipes={recipes}
+            searchInput={searchInput}
+            loading={loadingRecipes}
+            error={searchError}
+            selectedDay={selectedDay}
+            selectedMealType={selectedMealType}
+            weekDays={weekDays}
+            assigningKey={assigningKey}
+            onSearchInputChange={setSearchInput}
+            onSelectedDayChange={setSelectedDay}
+            onSelectedMealTypeChange={setSelectedMealType}
+            onAssignRecipe={handleAssignRecipe}
+          />
+        </div>
       </div>
     </section>
   );
