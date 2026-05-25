@@ -198,6 +198,21 @@ export async function listMealPlanItemsForWeek(weekStartIso: string): Promise<Me
   return (data ?? []).map(mapMealPlanItemRow);
 }
 
+export async function clearWeekPlan(weekStartIso: string): Promise<void> {
+  const plan = await getMealPlanForWeek(weekStartIso);
+  if (!plan) return;
+
+  const endIso = plan.end_date ?? getWeekEndIso(weekStartIso);
+  const { error } = await supabase
+    .from("meal_plan_items")
+    .delete()
+    .eq("meal_plan_id", plan.id)
+    .gte("planned_for", weekStartIso)
+    .lte("planned_for", endIso);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function addMealPlanItem(input: AddMealPlanItemInput): Promise<MealPlanItem> {
   const mealPlanId = await ensureMealPlanIdForWeek(input.weekStartIso);
   const { data, error } = await supabase

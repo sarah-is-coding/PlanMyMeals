@@ -3,14 +3,18 @@ import { previewMealPlanWeek } from "../api";
 import { formatWeekRangeLabel, getWeekDays, getWeekStartIso } from "../dateUtils";
 import type { MealPlanDayPreview } from "../types";
 
+type CopyMode = "add" | "replace";
+
 type Props = {
   currentWeekStartIso: string;
+  currentWeekHasItems: boolean;
   onJumpToWeek: (weekStartIso: string) => void;
-  onCopyToCurrentWeek: (sourceWeekStartIso: string) => Promise<void>;
+  onCopyToCurrentWeek: (sourceWeekStartIso: string, mode: CopyMode) => Promise<void>;
 };
 
 export default function PastMealPlanPanel({
   currentWeekStartIso,
+  currentWeekHasItems,
   onJumpToWeek,
   onCopyToCurrentWeek,
 }: Props) {
@@ -23,6 +27,7 @@ export default function PastMealPlanPanel({
   const [isEmpty, setIsEmpty] = useState(false);
   const [copying, setCopying] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (!pickedDate) {
@@ -38,6 +43,7 @@ export default function PastMealPlanPanel({
     const weekStart = getWeekStartIso(date);
     setPreviewWeekStart(weekStart);
     setCopyDone(false);
+    setShowConfirm(false);
 
     let mounted = true;
     const run = async () => {
@@ -68,6 +74,26 @@ export default function PastMealPlanPanel({
   const weekLabel = previewWeekStart ? formatWeekRangeLabel(previewWeekStart) : null;
   const isCurrentWeek = previewWeekStart === currentWeekStartIso;
   const previewByDate = new Map(preview.map((p) => [p.dateIso, p.recipes]));
+
+  const executeCopy = (mode: CopyMode) => {
+    if (!previewWeekStart) return;
+    setShowConfirm(false);
+    setCopying(true);
+    setCopyDone(false);
+    onCopyToCurrentWeek(previewWeekStart, mode)
+      .then(() => setCopyDone(true))
+      .catch(() => { /* parent surfaces the error via plannerError */ })
+      .finally(() => setCopying(false));
+  };
+
+  const handleCopyClick = () => {
+    if (!previewWeekStart || isEmpty) return;
+    if (currentWeekHasItems) {
+      setShowConfirm(true);
+    } else {
+      executeCopy("add");
+    }
+  };
 
   return (
     <article className="workspace-card past-plan-panel">
@@ -132,41 +158,60 @@ export default function PastMealPlanPanel({
                 </div>
               )}
 
-              <div className="past-plan-panel__actions">
-                {!isCurrentWeek && (
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => {
-                      if (previewWeekStart) onJumpToWeek(previewWeekStart);
-                    }}
-                  >
-                    View week ↗
-                  </button>
-                )}
-                {!isEmpty && (
-                  <button
-                    type="button"
-                    className="btn btn--primary"
-                    disabled={copying || copyDone}
-                    onClick={() => {
-                      if (!previewWeekStart) return;
-                      setCopying(true);
-                      setCopyDone(false);
-                      onCopyToCurrentWeek(previewWeekStart)
-                        .then(() => setCopyDone(true))
-                        .catch(() => {/* parent surfaces the error */})
-                        .finally(() => setCopying(false));
-                    }}
-                  >
-                    {copying
-                      ? "Copying…"
-                      : copyDone
-                        ? "✓ Copied to current week"
-                        : "Copy to current week"}
-                  </button>
-                )}
-              </div>
+              {/* Inline confirmation when current week already has meals */}
+              {showConfirm && (
+                <div className="past-plan-panel__confirm">
+                  <p className="past-plan-panel__confirm-label">
+                    Current week already has meals. What would you like to do?
+                  </p>
+                  <div className="past-plan-panel__actions">
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => executeCopy("add")}
+                    >
+                      Add on top
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      onClick={() => executeCopy("replace")}
+                    >
+                      Replace existing
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!showConfirm && (
+                <div className="past-plan-panel__actions">
+                  {!isCurrentWeek && (
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        if (previewWeekStart) onJumpToWeek(previewWeekStart);
+                      }}
+                    >
+                      View week ↗
+                    </button>
+                  )}
+                  {!isEmpty && (
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      disabled={copying || copyDone}
+                      onClick={handleCopyClick}
+                    >
+                      {copying
+                        ? "Copying…"
+                        : copyDone
+                          ? "✓ Copied"
+                          : "Copy to current week"}
+                    </button>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

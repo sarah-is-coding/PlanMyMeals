@@ -3,6 +3,7 @@ import LoadingModal from "../../../components/feedback/LoadingModal";
 import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
   addMealPlanItem,
+  clearWeekPlan,
   copyWeekPlan,
   deleteMealPlanItem,
   listMealPlanItemsForWeek,
@@ -260,16 +261,18 @@ export default function MealPlansPage() {
   );
 
   const handleCopyWeekToCurrentWeek = useCallback(
-    async (sourceWeekStartIso: string) => {
+    async (sourceWeekStartIso: string, mode: "add" | "replace") => {
       setPlannerError(null);
-      const newItems = await copyWeekPlan(sourceWeekStartIso, weekStartIso);
-      if (newItems.length > 0) {
-        setItems((current) => {
-          const next = [...current, ...newItems];
-          saveCachedMealPlanItems(weekStartIso, next);
-          return next;
-        });
+      if (mode === "replace") {
+        await clearWeekPlan(weekStartIso);
       }
+      const newItems = await copyWeekPlan(sourceWeekStartIso, weekStartIso);
+      setItems((current) => {
+        const base = mode === "replace" ? [] : current;
+        const next = [...base, ...newItems];
+        saveCachedMealPlanItems(weekStartIso, next);
+        return next;
+      });
     },
     [weekStartIso]
   );
@@ -335,6 +338,7 @@ export default function MealPlansPage() {
         <div className="meal-planner-sidebar">
           <PastMealPlanPanel
             currentWeekStartIso={weekStartIso}
+            currentWeekHasItems={items.length > 0}
             onJumpToWeek={setWeekStartIso}
             onCopyToCurrentWeek={handleCopyWeekToCurrentWeek}
           />
