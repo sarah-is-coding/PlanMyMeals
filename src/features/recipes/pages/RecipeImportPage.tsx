@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { createRecipe } from "../api";
 import RecipeAiImportPanel from "../components/RecipeAiImportPanel";
+import { extractRecipesFromText } from "../importApi";
 import type { ImportedRecipe } from "../importTypes";
 import { mapImportedRecipeToInput } from "../utils/recipeImport";
 
@@ -36,6 +37,7 @@ export default function RecipeImportPage() {
       </article>
 
       <RecipeAiImportPanel
+        runRequest={extractRecipesFromText}
         onUseDraft={handleUseImportedDraft}
         onCreateRecipes={handleCreateImportedRecipes}
       />

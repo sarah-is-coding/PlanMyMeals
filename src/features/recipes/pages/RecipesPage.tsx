@@ -175,6 +175,14 @@ export default function RecipesPage() {
                 >
                   Import Recipe
                 </Link>
+                <Link
+                  className="recipe-add-menu__item"
+                  to="/app/recipes/generate"
+                  role="menuitem"
+                  onClick={() => clearRecipeListViewState()}
+                >
+                  Generate Recipe
+                </Link>
               </div>
             ) : null}
           </div>

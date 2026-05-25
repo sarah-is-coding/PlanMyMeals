@@ -17,6 +17,8 @@ type SourceContent = {
   warning: string | null;
 };
 
+type RequestMode = "import" | "generate";
+
 const recipeSchema = {
   type: "OBJECT",
   properties: {
@@ -190,7 +192,20 @@ const fetchSource = async (url: string): Promise<SourceContent> => {
   }
 };
 
-const buildPrompt = (notes: string, sources: SourceContent[]): string => {
+const recipeOutputRules = `
+Rules:
+- Do not invent exact quantities, times, or servings when extracting from a source. Use null or empty strings when missing.
+- Preserve user modifications from notes over website defaults.
+- Keep instructions text-first and compact. Format instructions as newline-separated numbered steps: "1. ...\n2. ...\n3. ...". Do not return all steps in one paragraph.
+- Instructions must be fully self-contained. Never write "according to the source recipe", "follow the source recipe", "see source", "as directed", "per package", or any wording that requires opening the URL.
+- If a source step references another recipe, package, video, or external page, rewrite it into direct cooking instructions using the available text. If details are unavailable, state the missing detail plainly in warnings instead of referencing the source.
+- Include ingredient details directly in the steps when needed. A user must be able to cook from the saved recipe without visiting sourceUrl.
+- Split ingredients into ingredientName, quantity, unit, and notes.
+- Use category only from the allowed ingredient categories.
+- Add warnings for inaccessible URLs, missing details, social/video links that could not be read, or low-confidence extraction.
+`;
+
+const buildImportPrompt = (notes: string, sources: SourceContent[]): string => {
   const sourceText = sources
     .map(
       (source, index) => `
@@ -207,16 +222,7 @@ You are extracting personal recipes for PlanMyMeals.
 
 Return concise JSON matching the provided schema. Extract every distinct recipe from the notes and fetched sources. A heading followed by a URL belongs to the same recipe when they are adjacent. Notes after a URL should modify that recipe when clearly related.
 
-Rules:
-- Do not invent exact quantities, times, or servings. Use null or empty strings when missing.
-- Preserve user modifications from notes over website defaults.
-- Keep instructions text-first and compact. Format instructions as newline-separated numbered steps: "1. ...\n2. ...\n3. ...". Do not return all steps in one paragraph.
-- Instructions must be fully self-contained. Never write "according to the source recipe", "follow the source recipe", "see source", "as directed", "per package", or any wording that requires opening the URL.
-- If a source step references another recipe, package, video, or external page, rewrite it into direct cooking instructions using the available text. If details are unavailable, state the missing detail plainly in warnings instead of referencing the source.
-- Include ingredient details directly in the steps when needed. A user must be able to cook from the saved recipe without visiting sourceUrl.
-- Split ingredients into ingredientName, quantity, unit, and notes.
-- Use category only from the allowed ingredient categories.
-- Add warnings for inaccessible URLs, missing details, social/video links that could not be read, or low-confidence extraction.
+${recipeOutputRules}
 - Use sourceUrl for the most relevant URL for each recipe.
 
 USER NOTES:
@@ -226,6 +232,22 @@ FETCHED SOURCES:
 ${sourceText}
 `;
 };
+
+const buildGeneratePrompt = (requestText: string): string => `
+You are generating personal recipe drafts for PlanMyMeals.
+
+Return concise JSON matching the provided schema. Generate every distinct recipe requested by the user. If the user asks for multiple recipes, return multiple objects in recipes.
+
+Generation rules:
+- Generate complete, cookable recipes with realistic ingredients, quantities, timings, servings, and instructions.
+- Use sourceUrl: null for generated recipes.
+- Respect requested ingredients, dislikes, cuisine, diet, equipment, budget, prep time, servings, and number of recipes.
+- If the user gives vague constraints, make reasonable practical choices and add a short warning explaining assumptions.
+${recipeOutputRules}
+
+USER REQUEST:
+${requestText.slice(0, MAX_INPUT_CHARS)}
+`;
 
 const parseGeminiJson = (text: string): unknown => {
   const trimmed = text.trim();
@@ -317,19 +339,33 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: "You must be signed in to import recipes." }, 401);
   }
 
-  const body = await request.json().catch(() => null) as { text?: string } | null;
+  const body = await request.json().catch(() => null) as {
+    mode?: RequestMode;
+    text?: string;
+  } | null;
+  const mode = body?.mode === "generate" ? "generate" : "import";
   const text = body?.text?.trim() ?? "";
   if (!text) {
-    return jsonResponse({ error: "Paste recipe notes, links, or both." }, 400);
+    return jsonResponse(
+      {
+        error:
+          mode === "generate"
+            ? "Describe the recipe or recipes you want to generate."
+            : "Paste recipe notes, links, or both.",
+      },
+      400
+    );
   }
 
-  const urls = extractUrls(text);
-  const sources = await Promise.all(urls.map(fetchSource));
+  const urls = mode === "import" ? extractUrls(text) : [];
+  const sources = mode === "import" ? await Promise.all(urls.map(fetchSource)) : [];
   const sourceWarnings = sources
     .map((source) => source.warning)
     .filter((warning): warning is string => Boolean(warning));
 
-  const geminiResponse = await callGeminiWithBackoff(buildPrompt(text, sources), apiKey);
+  const prompt =
+    mode === "generate" ? buildGeneratePrompt(text) : buildImportPrompt(text, sources);
+  const geminiResponse = await callGeminiWithBackoff(prompt, apiKey);
 
   if (!geminiResponse.ok) {
     const errorText = await geminiResponse.text();

@@ -16,6 +16,7 @@ Simple personal meal planner with a mobile-friendly web experience that lets you
 
 ## AI Recipe Import
 - The Add Recipe screen can extract one or many recipe drafts from pasted notes, recipe URLs, or both.
+- The Recipes menu can also generate one or many recipe drafts from a plain-language request.
 - Extraction runs through the Supabase Edge Function at `supabase/functions/import-recipes`, keeping `GEMINI_API_KEY` server-side.
 - Deploy the function with Supabase and set the secret with `supabase secrets set GEMINI_API_KEY=...`.
 

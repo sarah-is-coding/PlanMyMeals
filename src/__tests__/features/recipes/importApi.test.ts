@@ -13,7 +13,10 @@ vi.mock("../../../lib/supabaseClient", () => ({
   },
 }));
 
-import { extractRecipesFromText } from "../../../features/recipes/importApi";
+import {
+  extractRecipesFromText,
+  generateRecipesFromPrompt,
+} from "../../../features/recipes/importApi";
 
 describe("extractRecipesFromText", () => {
   beforeEach(() => {
@@ -31,7 +34,7 @@ describe("extractRecipesFromText", () => {
     await extractRecipesFromText(SAMPLE_RECIPE_IMPORT_NOTES);
 
     expect(invoke).toHaveBeenCalledWith("import-recipes", {
-      body: { text: SAMPLE_RECIPE_IMPORT_NOTES },
+      body: { mode: "import", text: SAMPLE_RECIPE_IMPORT_NOTES },
     });
     expect(SAMPLE_RECIPE_IMPORT_NOTES).toContain("Chicken Caesar taco salad");
     expect(SAMPLE_RECIPE_IMPORT_NOTES).toContain(
@@ -46,6 +49,36 @@ describe("extractRecipesFromText", () => {
   it("rejects empty import text before calling the function", async () => {
     await expect(extractRecipesFromText("   ")).rejects.toThrow(
       "Paste recipe notes, links, or both before importing."
+    );
+    expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe("generateRecipesFromPrompt", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    invoke.mockResolvedValue({
+      data: {
+        recipes: [],
+        warnings: [],
+      },
+      error: null,
+    });
+  });
+
+  it("sends generation requests to the import-recipes function in generate mode", async () => {
+    const prompt = "Generate 2 quick vegetarian dinners with chickpeas.";
+
+    await generateRecipesFromPrompt(prompt);
+
+    expect(invoke).toHaveBeenCalledWith("import-recipes", {
+      body: { mode: "generate", text: prompt },
+    });
+  });
+
+  it("rejects empty generation prompts before calling the function", async () => {
+    await expect(generateRecipesFromPrompt("   ")).rejects.toThrow(
+      "Describe the recipe or recipes you want to generate."
     );
     expect(invoke).not.toHaveBeenCalled();
   });

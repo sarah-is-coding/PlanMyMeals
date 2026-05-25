@@ -4,13 +4,7 @@ import RecipeAiImportPanel from "../../../../features/recipes/components/RecipeA
 import type { ImportedRecipe } from "../../../../features/recipes/importTypes";
 import { SAMPLE_RECIPE_IMPORT_NOTES } from "../fixtures/sampleRecipeImportNotes";
 
-vi.mock("../../../../features/recipes/importApi", () => ({
-  extractRecipesFromText: vi.fn(),
-}));
-
-import { extractRecipesFromText } from "../../../../features/recipes/importApi";
-
-const mockExtractRecipesFromText = vi.mocked(extractRecipesFromText);
+const runRequest = vi.fn();
 
 const IMPORTED_RECIPES: ImportedRecipe[] = [
   {
@@ -105,7 +99,7 @@ const IMPORTED_RECIPES: ImportedRecipe[] = [
 describe("RecipeAiImportPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExtractRecipesFromText.mockResolvedValue({
+    runRequest.mockResolvedValue({
       recipes: IMPORTED_RECIPES,
       warnings: ["Could not read one social/video link."],
     });
@@ -114,7 +108,11 @@ describe("RecipeAiImportPanel", () => {
   it("extracts the sample mixed notes and links and renders returned recipe drafts", async () => {
     const user = userEvent.setup();
     render(
-      <RecipeAiImportPanel onUseDraft={vi.fn()} onCreateRecipes={vi.fn()} />
+      <RecipeAiImportPanel
+        runRequest={runRequest}
+        onUseDraft={vi.fn()}
+        onCreateRecipes={vi.fn()}
+      />
     );
 
     fireEvent.change(screen.getByLabelText(/notes and links/i), {
@@ -123,9 +121,7 @@ describe("RecipeAiImportPanel", () => {
     await user.click(screen.getByRole("button", { name: /extract recipes/i }));
 
     await waitFor(() => {
-      expect(mockExtractRecipesFromText).toHaveBeenCalledWith(
-        SAMPLE_RECIPE_IMPORT_NOTES
-      );
+      expect(runRequest).toHaveBeenCalledWith(SAMPLE_RECIPE_IMPORT_NOTES);
     });
 
     expect(await screen.findByText("Chicken Caesar taco salad")).toBeInTheDocument();
@@ -142,7 +138,11 @@ describe("RecipeAiImportPanel", () => {
     const user = userEvent.setup();
     const onCreateRecipes = vi.fn().mockResolvedValue(undefined);
     render(
-      <RecipeAiImportPanel onUseDraft={vi.fn()} onCreateRecipes={onCreateRecipes} />
+      <RecipeAiImportPanel
+        runRequest={runRequest}
+        onUseDraft={vi.fn()}
+        onCreateRecipes={onCreateRecipes}
+      />
     );
 
     fireEvent.change(screen.getByLabelText(/notes and links/i), {
@@ -160,7 +160,11 @@ describe("RecipeAiImportPanel", () => {
     const user = userEvent.setup();
     const onUseDraft = vi.fn();
     render(
-      <RecipeAiImportPanel onUseDraft={onUseDraft} onCreateRecipes={vi.fn()} />
+      <RecipeAiImportPanel
+        runRequest={runRequest}
+        onUseDraft={onUseDraft}
+        onCreateRecipes={vi.fn()}
+      />
     );
 
     fireEvent.change(screen.getByLabelText(/notes and links/i), {

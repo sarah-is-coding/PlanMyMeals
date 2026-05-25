@@ -1,8 +1,17 @@
 import { useMemo, useState } from "react";
-import { extractRecipesFromText } from "../importApi";
-import type { ImportedRecipe } from "../importTypes";
+import type { ImportedRecipe, RecipeImportResult } from "../importTypes";
 
 type RecipeAiImportPanelProps = {
+  actionLabel?: string;
+  emptyResultMessage?: string;
+  errorMessage?: string;
+  helperText?: string;
+  inputLabel?: string;
+  panelTitle?: string;
+  placeholder?: string;
+  runLabel?: string;
+  runLoadingLabel?: string;
+  runRequest: (text: string) => Promise<RecipeImportResult>;
   onUseDraft: (recipe: ImportedRecipe) => void;
   onCreateRecipes: (recipes: ImportedRecipe[]) => Promise<void>;
 };
@@ -13,6 +22,16 @@ const getTotalMinutes = (recipe: ImportedRecipe): string => {
 };
 
 export default function RecipeAiImportPanel({
+  actionLabel = "imported",
+  emptyResultMessage = "No recipes were found. Add a title, ingredients, or a recipe URL.",
+  errorMessage = "Failed to import recipes.",
+  helperText = "Paste notes, recipe links, or a mixed list to extract recipe drafts.",
+  inputLabel = "Notes and links",
+  panelTitle = "AI Import",
+  placeholder = "Chicken Caesar taco salad\nGround chicken meatball\nhttps://example.com/recipe",
+  runLabel = "Extract recipes",
+  runLoadingLabel = "Extracting...",
+  runRequest,
   onUseDraft,
   onCreateRecipes,
 }: RecipeAiImportPanelProps) {
@@ -35,18 +54,18 @@ export default function RecipeAiImportPanel({
     setWarnings([]);
 
     try {
-      const result = await extractRecipesFromText(importText);
+      const result = await runRequest(importText);
       setRecipes(result.recipes);
       setWarnings(result.warnings);
       setSelectedIndexes(new Set(result.recipes.map((_, index) => index)));
       if (result.recipes.length === 0) {
-        setError("No recipes were found. Add a title, ingredients, or a recipe URL.");
+        setError(emptyResultMessage);
       }
     } catch (extractError) {
       setError(
         extractError instanceof Error
           ? extractError.message
-          : "Failed to import recipes."
+          : errorMessage
       );
     } finally {
       setExtracting(false);
@@ -67,7 +86,7 @@ export default function RecipeAiImportPanel({
 
   const handleCreateSelected = async () => {
     if (selectedRecipes.length === 0) {
-      setError("Select at least one imported recipe first.");
+      setError(`Select at least one ${actionLabel} recipe first.`);
       return;
     }
 
@@ -80,7 +99,7 @@ export default function RecipeAiImportPanel({
       setError(
         createError instanceof Error
           ? createError.message
-          : "Failed to create imported recipes."
+          : `Failed to create ${actionLabel} recipes.`
       );
       setCreating(false);
     }
@@ -90,19 +109,19 @@ export default function RecipeAiImportPanel({
     <article className="workspace-card recipe-import">
       <div className="recipe-import__header">
         <div>
-          <h2>AI Import</h2>
-          <p>Paste notes, recipe links, or a mixed list to extract recipe drafts.</p>
+          <h2>{panelTitle}</h2>
+          <p>{helperText}</p>
         </div>
         <span className="recipe-import__model">Gemini Flash-Lite</span>
       </div>
 
       <label className="recipe-field">
-        <span>Notes and links</span>
+        <span>{inputLabel}</span>
         <textarea
           value={importText}
           onChange={(event) => setImportText(event.target.value)}
           rows={8}
-          placeholder="Chicken Caesar taco salad&#10;ground chicken meatball&#10;https://example.com/recipe"
+          placeholder={placeholder}
         />
       </label>
 
@@ -113,7 +132,7 @@ export default function RecipeAiImportPanel({
           onClick={handleExtract}
           disabled={extracting || creating || !importText.trim()}
         >
-          {extracting ? "Extracting..." : "Extract recipes"}
+          {extracting ? runLoadingLabel : runLabel}
         </button>
         {recipes.length > 0 ? (
           <button
