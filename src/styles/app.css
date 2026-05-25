@@ -757,6 +757,10 @@
   gap: 0.85rem;
 }
 
+.recipe-route--editing {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
 .recipe-empty-state {
   display: grid;
   gap: 0.72rem;
@@ -1367,6 +1371,26 @@
   display: flex;
   gap: 0.56rem;
   flex-wrap: wrap;
+}
+
+.recipe-edit-sticky-actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  z-index: 35;
+  transform: translateX(-50%);
+  width: min(32rem, calc(100vw - 1.5rem));
+  padding: 0.62rem;
+  border: 1px solid var(--alpha-brand-22);
+  border-radius: 0.9rem;
+  background: var(--alpha-cyan-240-94);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.recipe-edit-sticky-actions .btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .recipe-scale-tools {

@@ -305,7 +305,9 @@ export default function RecipeDetailPage() {
   );
 
   return (
-    <section className="workspace-route recipe-route">
+    <section
+      className={`workspace-route recipe-route${editing ? " recipe-route--editing" : ""}`}
+    >
       <article className="workspace-card">
         <div className="recipe-page-header">
           <h1>{formValues.title || "Recipe Details"}</h1>
@@ -343,7 +345,11 @@ export default function RecipeDetailPage() {
       </article>
 
       {editing ? (
-        <form className="workspace-card recipe-form" onSubmit={handleSave}>
+        <form
+          id="recipe-edit-form"
+          className="workspace-card recipe-form"
+          onSubmit={handleSave}
+        >
           <RecipeFormFields
             values={formValues}
             readOnly={false}
@@ -385,6 +391,18 @@ export default function RecipeDetailPage() {
           onViewServingsChange={setViewServings}
         />
       )}
+      {editing ? (
+        <div className="recipe-edit-sticky-actions" aria-label="Recipe edit actions">
+          <button
+            type="submit"
+            form="recipe-edit-form"
+            className="btn btn--primary"
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
