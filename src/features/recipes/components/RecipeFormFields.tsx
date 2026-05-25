@@ -212,6 +212,16 @@ export default function RecipeFormFields({
             </article>
           ))}
         </div>
+
+        {!readOnly ? (
+          <button
+            type="button"
+            className="btn btn--ghost recipe-ingredients__add-bottom"
+            onClick={onAddIngredient}
+          >
+            + Add ingredient
+          </button>
+        ) : null}
       </section>
     </>
   );

@@ -1095,6 +1095,12 @@
   justify-self: flex-start;
 }
 
+.recipe-ingredients__add-bottom {
+  justify-self: start;
+  font-size: 0.88rem;
+  opacity: 0.82;
+}
+
 /* ── Ingredient name combobox ─────────────────────────────── */
 .ingredient-combobox {
   position: relative;
