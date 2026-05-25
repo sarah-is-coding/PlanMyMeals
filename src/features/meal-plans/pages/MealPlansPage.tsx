@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
   addMealPlanItem,
   applySavedMealPlan,
   clearWeekPlan,
-  copyWeekPlan,
   deleteMealPlanItem,
   listMealPlanItemsForWeek,
   moveMealPlanItem,
@@ -262,24 +260,9 @@ export default function MealPlansPage() {
     [items, weekStartIso]
   );
 
-  const handleCopyWeekToCurrentWeek = useCallback(
-    async (sourceWeekStartIso: string, mode: "add" | "replace") => {
-      setPlannerError(null);
-      if (mode === "replace") {
-        await clearWeekPlan(weekStartIso);
-      }
-      const newItems = await copyWeekPlan(sourceWeekStartIso, weekStartIso);
-      setItems((current) => {
-        const base = mode === "replace" ? [] : current;
-        const next = [...base, ...newItems];
-        saveCachedMealPlanItems(weekStartIso, next);
-        return next;
-      });
-    },
-    [weekStartIso]
-  );
-
-  const handleApplySavedPlan = useCallback(
+  /** Unified handler for both "copy past week" and "apply saved plan".
+   *  Uses applySavedMealPlan so multi-week plans are handled correctly. */
+  const handleApplyPlan = useCallback(
     async (planId: string, mode: "add" | "replace") => {
       setPlannerError(null);
       if (mode === "replace") {
@@ -334,12 +317,9 @@ export default function MealPlansPage() {
         title="Loading meal planner..."
         message="Preparing your calendar and saved meals."
       />
-      <div className="meal-planner-route__topbar">
-        {plannerError ? <p className="error">{plannerError}</p> : <span />}
-        <Link to="/app/saved-meal-plans" className="meal-planner-route__saved-link">
-          Manage saved plans →
-        </Link>
-      </div>
+      {plannerError && (
+        <p className="meal-planner-route__error error">{plannerError}</p>
+      )}
 
       <div className="meal-planner-layout">
         <MealPlannerCalendar
@@ -364,8 +344,7 @@ export default function MealPlansPage() {
             currentWeekStartIso={weekStartIso}
             currentWeekHasItems={items.length > 0}
             onJumpToWeek={setWeekStartIso}
-            onCopyToCurrentWeek={handleCopyWeekToCurrentWeek}
-            onApplySavedPlan={handleApplySavedPlan}
+            onApplyPlan={handleApplyPlan}
           />
           <RecipeAssignmentPanel
             recipes={recipes}

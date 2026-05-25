@@ -1414,6 +1414,19 @@
   flex-wrap: wrap;
 }
 
+.meal-calendar__manage-link {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted-soft);
+}
+
+.meal-calendar__manage-link:hover {
+  color: var(--color-brand-dark);
+  text-decoration: underline;
+}
+
 .meal-calendar__actions {
   display: flex;
   gap: 0.45rem;
@@ -1965,27 +1978,8 @@
   }
 }
 
-/* ── Meal planner page topbar (error + saved-plans link) ─── */
-.meal-planner-route__topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.6rem;
-  min-height: 1.6rem;
-}
-
-.meal-planner-route__saved-link {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-brand-dark);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.meal-planner-route__saved-link:hover {
-  text-decoration: underline;
+.meal-planner-route__error {
+  margin-bottom: 0.5rem;
 }
 
 /* ── Browse-plans panel: tab switcher ────────────────────── */
@@ -2282,5 +2276,168 @@
 .btn--danger:hover:not(:disabled) {
   background: #991b1b;
   border-color: #991b1b;
+}
+
+/* ── Plan-span calendar ───────────────────────────────────── */
+.plan-cal {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.plan-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.plan-cal__nav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: var(--color-muted-soft);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+  line-height: 1;
+}
+
+.plan-cal__nav:hover {
+  background: var(--alpha-slate-33);
+  color: var(--color-ink-soft);
+}
+
+.plan-cal__month-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  flex: 1;
+  text-align: center;
+}
+
+.plan-cal__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.plan-cal__weekday {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-muted-faint);
+  text-align: center;
+  padding: 0.15rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Grid: zero column gap so the band flows continuously across cells.
+   A small row gap provides visual breathing room between weeks. */
+.plan-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 3px;
+}
+
+.plan-cal__day {
+  position: relative;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  user-select: none;
+}
+
+.plan-cal__day--in-span {
+  cursor: pointer;
+}
+
+/* The coloured band: absolutely positioned behind the day number.
+   No horizontal margins by default so adjacent bands merge into one bar.
+   Only add inset where caps are needed. */
+.plan-cal__day-band {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  border-radius: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: background 0.1s;
+}
+
+/* Left cap: indent the band's left edge and round it */
+.plan-cal__day--band-left .plan-cal__day-band {
+  left: 20%;
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+/* Right cap: indent the band's right edge and round it */
+.plan-cal__day--band-right .plan-cal__day-band {
+  right: 20%;
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+/* Single-day plan or isolated cell: full pill */
+.plan-cal__day--band-left.plan-cal__day--band-right .plan-cal__day-band {
+  left: 15%;
+  right: 15%;
+  border-radius: 999px;
+}
+
+.plan-cal__day-num {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+/* Greyed-out padding days (prev / next month) */
+.plan-cal__day--other-month .plan-cal__day-num {
+  color: var(--color-muted-faint);
+}
+
+/* Today: small dot under the number */
+.plan-cal__day--today .plan-cal__day-num {
+  font-weight: 800;
+  color: var(--color-brand-dark);
+}
+
+.plan-cal__day--today .plan-cal__day-num::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-brand);
+}
+
+/* Selected state: day number white + bold so it reads on the darker band */
+.plan-cal__day--selected .plan-cal__day-num {
+  color: var(--color-ink);
+  font-weight: 800;
+}
+
+.plan-cal__status {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted-soft);
+}
+
+/* ── Selected-plan detail below the calendar ─────────────── */
+.past-plan-panel__selection {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--alpha-slate-33);
+  margin-top: 0.3rem;
 }
 

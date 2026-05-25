@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  previewMealPlanWeek,
+  listMealPlanSpans,
   previewSavedMealPlan,
-  saveWeekPlan,
+  savePlanById,
   searchSavedMealPlans,
 } from "../api";
-import { formatWeekRangeLabel, getWeekDays, getWeekStartIso } from "../dateUtils";
-import type { MealPlanDayPreview, SavedMealPlan } from "../types";
+import { formatDateRange, getWeekStartIso } from "../dateUtils";
+import type { MealPlanDayPreview, MealPlanSpan, SavedMealPlan } from "../types";
+import PlanSpanCalendar from "./PlanSpanCalendar";
 
 type CopyMode = "add" | "replace";
 type PanelTab = "past" | "saved";
@@ -15,29 +16,35 @@ type Props = {
   currentWeekStartIso: string;
   currentWeekHasItems: boolean;
   onJumpToWeek: (weekStartIso: string) => void;
-  onCopyToCurrentWeek: (sourceWeekStartIso: string, mode: CopyMode) => Promise<void>;
-  onApplySavedPlan: (planId: string, mode: CopyMode) => Promise<void>;
+  /** Unified handler for both "copy past week" and "apply saved plan" actions. */
+  onApplyPlan: (planId: string, mode: CopyMode) => Promise<void>;
 };
 
-// ── Past-weeks tab ────────────────────────────────────────────────────────
+// ── Past-weeks tab (calendar-driven) ─────────────────────────────────────
 
 function PastWeeksTab({
   currentWeekStartIso,
   currentWeekHasItems,
   onJumpToWeek,
-  onCopyToCurrentWeek,
-}: Omit<Props, "onApplySavedPlan">) {
-  const [pickedDate, setPickedDate] = useState("");
-  const [previewWeekStart, setPreviewWeekStart] = useState<string | null>(null);
+  onApplyPlan,
+}: Props) {
+  // Span data for the calendar
+  const [spans, setSpans] = useState<MealPlanSpan[]>([]);
+  const [loadingSpans, setLoadingSpans] = useState(true);
+  const [spansError, setSpansError] = useState<string | null>(null);
+
+  // Selected plan and its preview
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [preview, setPreview] = useState<MealPlanDayPreview[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isEmpty, setIsEmpty] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  // Copy flow
   const [copying, setCopying] = useState(false);
   const [copyDone, setCopyDone] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Save-plan state
+  // Save-as-template flow
   const [showSaveInput, setShowSaveInput] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -45,67 +52,60 @@ function PastWeeksTab({
   const [savedLabel, setSavedLabel] = useState<string | null>(null);
   const saveInputRef = useRef<HTMLInputElement>(null);
 
+  // Load all plan spans once on mount
   useEffect(() => {
-    if (!pickedDate) {
-      setPreviewWeekStart(null);
+    let mounted = true;
+    listMealPlanSpans()
+      .then((data) => { if (mounted) setSpans(data); })
+      .catch((e) => { if (mounted) setSpansError(e instanceof Error ? e.message : "Failed to load plans."); })
+      .finally(() => { if (mounted) setLoadingSpans(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  // Load preview whenever a plan is selected
+  useEffect(() => {
+    if (!selectedPlanId) {
       setPreview([]);
-      setIsEmpty(false);
       return;
     }
-
-    const [year, month, day] = pickedDate.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-    const weekStart = getWeekStartIso(date);
-    setPreviewWeekStart(weekStart);
+    let mounted = true;
+    setLoadingPreview(true);
+    setPreviewError(null);
     setCopyDone(false);
     setShowConfirm(false);
     setShowSaveInput(false);
-    setSaveError(null);
     setSavedLabel(null);
 
-    let mounted = true;
-    const run = async () => {
-      setLoading(true);
-      setError(null);
-      setIsEmpty(false);
-      try {
-        const items = await previewMealPlanWeek(weekStart);
-        if (mounted) {
-          setPreview(items);
-          setIsEmpty(items.length === 0);
-        }
-      } catch (e) {
-        if (mounted) setError(e instanceof Error ? e.message : "Failed to load plan.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    void run();
+    previewSavedMealPlan(selectedPlanId)
+      .then((items) => { if (mounted) setPreview(items); })
+      .catch((e) => { if (mounted) setPreviewError(e instanceof Error ? e.message : "Failed to load preview."); })
+      .finally(() => { if (mounted) setLoadingPreview(false); });
+
     return () => { mounted = false; };
-  }, [pickedDate]);
+  }, [selectedPlanId]);
 
   useEffect(() => {
     if (showSaveInput) saveInputRef.current?.focus();
   }, [showSaveInput]);
 
-  const weekDays = previewWeekStart ? getWeekDays(previewWeekStart) : [];
-  const weekLabel = previewWeekStart ? formatWeekRangeLabel(previewWeekStart) : null;
-  const isCurrentWeek = previewWeekStart === currentWeekStartIso;
-  const previewByDate = new Map(preview.map((p) => [p.dateIso, p.recipes]));
+  const selectedSpan = spans.find((s) => s.id === selectedPlanId) ?? null;
+  const isEmpty = preview.length === 0;
+  const isCurrentWeekPlan =
+    selectedSpan !== null && selectedSpan.startDate === currentWeekStartIso;
 
   const executeCopy = (mode: CopyMode) => {
-    if (!previewWeekStart) return;
+    if (!selectedPlanId) return;
     setShowConfirm(false);
     setCopying(true);
     setCopyDone(false);
-    onCopyToCurrentWeek(previewWeekStart, mode)
+    onApplyPlan(selectedPlanId, mode)
       .then(() => setCopyDone(true))
       .catch(() => { /* parent surfaces the error */ })
       .finally(() => setCopying(false));
   };
 
   const handleCopyClick = () => {
-    if (!previewWeekStart || isEmpty) return;
+    if (!selectedPlanId || isEmpty) return;
     if (currentWeekHasItems) {
       setShowConfirm(true);
     } else {
@@ -114,10 +114,10 @@ function PastWeeksTab({
   };
 
   const handleSaveSubmit = () => {
-    if (!previewWeekStart || !saveName.trim()) return;
+    if (!selectedPlanId || !saveName.trim()) return;
     setSaving(true);
     setSaveError(null);
-    saveWeekPlan(previewWeekStart, saveName.trim())
+    savePlanById(selectedPlanId, saveName.trim())
       .then((saved) => {
         setSavedLabel(`Saved as "${saved.savedName}"`);
         setShowSaveInput(false);
@@ -129,40 +129,43 @@ function PastWeeksTab({
 
   return (
     <div className="past-plan-panel__body">
-      <label className="recipe-field">
-        <span>Pick any date in that week</span>
-        <input
-          type="date"
-          value={pickedDate}
-          onChange={(event) => setPickedDate(event.target.value)}
-        />
-      </label>
+      {spansError && <p className="error">{spansError}</p>}
 
-      {weekLabel && !loading && (
-        <p className="past-plan-panel__week-label">
-          {weekLabel}
-          {isCurrentWeek && (
-            <span className="past-plan-panel__current-badge">current</span>
+      <PlanSpanCalendar
+        spans={spans}
+        selectedPlanId={selectedPlanId}
+        onSelectPlan={setSelectedPlanId}
+        isLoading={loadingSpans}
+      />
+
+      {selectedSpan && (
+        <div className="past-plan-panel__selection">
+          <p className="past-plan-panel__week-label">
+            {formatDateRange(selectedSpan.startDate, selectedSpan.endDate)}
+            {isCurrentWeekPlan && (
+              <span className="past-plan-panel__current-badge">current</span>
+            )}
+          </p>
+
+          {previewError && <p className="error">{previewError}</p>}
+          {loadingPreview && <p className="past-plan-panel__status">Loading preview…</p>}
+
+          {!loadingPreview && isEmpty && !previewError && (
+            <p className="past-plan-panel__status">No meals in this plan.</p>
           )}
-        </p>
-      )}
 
-      {error && <p className="error">{error}</p>}
-      {loading && <p className="past-plan-panel__status">Loading…</p>}
-
-      {!loading && previewWeekStart && (
-        <>
-          {isEmpty ? (
-            <p className="past-plan-panel__status">No meals saved for this week.</p>
-          ) : (
+          {!loadingPreview && !isEmpty && (
             <div className="past-plan-panel__preview">
-              {weekDays.map((day) => {
-                const recipes = previewByDate.get(day.dateIso) ?? [];
+              {preview.map(({ dateIso, recipes }) => {
+                const [y, m, d] = dateIso.split("-").map(Number);
+                const dayLabel = new Intl.DateTimeFormat("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                }).format(new Date(y, m - 1, d));
                 return (
-                  <div key={day.dateIso} className="past-plan-panel__day">
-                    <span className="past-plan-panel__day-label">
-                      {day.weekdayShort} {day.monthDayLabel}
-                    </span>
+                  <div key={dateIso} className="past-plan-panel__day">
+                    <span className="past-plan-panel__day-label">{dayLabel}</span>
                     {recipes.length === 0 ? (
                       <span className="past-plan-panel__day-empty">—</span>
                     ) : (
@@ -176,14 +179,14 @@ function PastWeeksTab({
             </div>
           )}
 
-          {/* Save-as-template flow */}
+          {/* Save-as-template */}
           {!isEmpty && !showSaveInput && !savedLabel && (
             <button
               type="button"
               className="btn btn--ghost past-plan-panel__save-btn"
               onClick={() => setShowSaveInput(true)}
             >
-              Save as template…
+              Save as Meal Plan…
             </button>
           )}
           {!isEmpty && savedLabel && (
@@ -195,7 +198,7 @@ function PastWeeksTab({
                 ref={saveInputRef}
                 type="text"
                 className="past-plan-panel__save-input"
-                placeholder="Template name"
+                placeholder="Meal plan name"
                 value={saveName}
                 maxLength={80}
                 onChange={(e) => setSaveName(e.target.value)}
@@ -225,8 +228,8 @@ function PastWeeksTab({
             </div>
           )}
 
-          {/* Copy-to-current-week flow */}
-          {showConfirm && (
+          {/* Copy-to-current-week */}
+          {showConfirm ? (
             <div className="past-plan-panel__confirm">
               <p className="past-plan-panel__confirm-label">
                 Current week already has meals. What would you like to do?
@@ -240,15 +243,16 @@ function PastWeeksTab({
                 </button>
               </div>
             </div>
-          )}
-
-          {!showConfirm && (
+          ) : (
             <div className="past-plan-panel__actions">
-              {!isCurrentWeek && (
+              {!isCurrentWeekPlan && (
                 <button
                   type="button"
                   className="btn btn--ghost"
-                  onClick={() => { if (previewWeekStart) onJumpToWeek(previewWeekStart); }}
+                  onClick={() => {
+                    const [y, m, d] = selectedSpan.startDate.split("-").map(Number);
+                    onJumpToWeek(getWeekStartIso(new Date(y, m - 1, d)));
+                  }}
                 >
                   View week ↗
                 </button>
@@ -265,7 +269,7 @@ function PastWeeksTab({
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -275,10 +279,10 @@ function PastWeeksTab({
 
 function SavedPlansTab({
   currentWeekHasItems,
-  onApplySavedPlan,
+  onApplyPlan,
 }: {
   currentWeekHasItems: boolean;
-  onApplySavedPlan: (planId: string, mode: CopyMode) => Promise<void>;
+  onApplyPlan: (planId: string, mode: CopyMode) => Promise<void>;
 }) {
   const [searchInput, setSearchInput] = useState("");
   const [results, setResults] = useState<SavedMealPlan[]>([]);
@@ -334,7 +338,7 @@ function SavedPlansTab({
     setShowConfirm(false);
     setApplying(true);
     setApplyDone(false);
-    onApplySavedPlan(selectedPlan.id, mode)
+    onApplyPlan(selectedPlan.id, mode)
       .then(() => setApplyDone(true))
       .catch(() => { /* parent surfaces error */ })
       .finally(() => setApplying(false));
@@ -355,14 +359,7 @@ function SavedPlansTab({
     setShowConfirm(false);
   };
 
-  // Date-range display for a saved plan preview
-  const previewDays = selectedPlan
-    ? (() => {
-        const sorted = preview.map((p) => p.dateIso).sort();
-        return sorted;
-      })()
-    : [];
-
+  const previewDays = preview.map((p) => p.dateIso).sort();
   const previewByDate = new Map(preview.map((p) => [p.dateIso, p.recipes]));
 
   return (
@@ -400,7 +397,7 @@ function SavedPlansTab({
                 >
                   <span className="saved-plan-list__name">{plan.savedName}</span>
                   <span className="saved-plan-list__range">
-                    {formatWeekRangeLabel(plan.startDate)}
+                    {plan.startDate}
                   </span>
                   <span className="saved-plan-list__chevron" aria-hidden="true">
                     {isSelected ? "▲" : "▼"}
@@ -411,21 +408,16 @@ function SavedPlansTab({
                   <div className="saved-plan-list__detail">
                     {previewError && <p className="error">{previewError}</p>}
                     {loadingPreview && <p className="past-plan-panel__status">Loading preview…</p>}
-
                     {!loadingPreview && preview.length === 0 && !previewError && (
                       <p className="past-plan-panel__status">No meals in this plan.</p>
                     )}
-
                     {!loadingPreview && preview.length > 0 && (
                       <div className="past-plan-panel__preview past-plan-panel__preview--compact">
                         {previewDays.map((dateIso) => {
                           const recipes = previewByDate.get(dateIso) ?? [];
-                          // Show weekday name derived from the saved date
                           const [y, m, d] = dateIso.split("-").map(Number);
                           const dayLabel = new Intl.DateTimeFormat("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
+                            weekday: "short", month: "short", day: "numeric",
                           }).format(new Date(y, m - 1, d));
                           return (
                             <div key={dateIso} className="past-plan-panel__day">
@@ -443,7 +435,7 @@ function SavedPlansTab({
                       </div>
                     )}
 
-                    {showConfirm && (
+                    {showConfirm ? (
                       <div className="past-plan-panel__confirm">
                         <p className="past-plan-panel__confirm-label">
                           Current week already has meals. What would you like to do?
@@ -457,9 +449,7 @@ function SavedPlansTab({
                           </button>
                         </div>
                       </div>
-                    )}
-
-                    {!showConfirm && (
+                    ) : (
                       <div className="past-plan-panel__actions">
                         <button
                           type="button"
@@ -467,11 +457,7 @@ function SavedPlansTab({
                           disabled={applying || applyDone}
                           onClick={handleApplyClick}
                         >
-                          {applying
-                            ? "Applying…"
-                            : applyDone
-                              ? "✓ Applied"
-                              : "Apply to current week"}
+                          {applying ? "Applying…" : applyDone ? "✓ Applied" : "Apply to current week"}
                         </button>
                       </div>
                     )}
@@ -492,8 +478,7 @@ export default function PastMealPlanPanel({
   currentWeekStartIso,
   currentWeekHasItems,
   onJumpToWeek,
-  onCopyToCurrentWeek,
-  onApplySavedPlan,
+  onApplyPlan,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<PanelTab>("past");
@@ -540,12 +525,12 @@ export default function PastMealPlanPanel({
               currentWeekStartIso={currentWeekStartIso}
               currentWeekHasItems={currentWeekHasItems}
               onJumpToWeek={onJumpToWeek}
-              onCopyToCurrentWeek={onCopyToCurrentWeek}
+              onApplyPlan={onApplyPlan}
             />
           ) : (
             <SavedPlansTab
               currentWeekHasItems={currentWeekHasItems}
-              onApplySavedPlan={onApplySavedPlan}
+              onApplyPlan={onApplyPlan}
             />
           )}
         </>

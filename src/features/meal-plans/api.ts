@@ -5,6 +5,7 @@ import type {
   MealPlanDayPreview,
   MealPlanItem,
   MealPlannerRecipeSummary,
+  MealPlanSpan,
   MoveMealPlanItemInput,
   MealType,
   SavedMealPlan,
@@ -397,10 +398,8 @@ function mapSavedPlanRow(row: SavedMealPlanRow): SavedMealPlan {
   };
 }
 
-/** Name (and thereby bookmark) an existing week's meal plan. Creates the plan row first if needed. */
-export async function saveWeekPlan(weekStartIso: string, savedName: string): Promise<SavedMealPlan> {
-  const planId = await ensureMealPlanIdForWeek(weekStartIso);
-
+/** Name (and bookmark) a specific plan by its id. */
+export async function savePlanById(planId: string, savedName: string): Promise<SavedMealPlan> {
   const { data, error } = await supabase
     .from("meal_plans")
     .update({ saved_name: savedName.trim() })
@@ -410,6 +409,32 @@ export async function saveWeekPlan(weekStartIso: string, savedName: string): Pro
 
   if (error) throw new Error(error.message);
   return mapSavedPlanRow(data);
+}
+
+/** Name (and thereby bookmark) an existing week's meal plan. Creates the plan row first if needed. */
+export async function saveWeekPlan(weekStartIso: string, savedName: string): Promise<SavedMealPlan> {
+  const planId = await ensureMealPlanIdForWeek(weekStartIso);
+  return savePlanById(planId, savedName);
+}
+
+/** Return every meal plan's id + date range for calendar display.
+ *  endDate is always populated — legacy rows without end_date fall back to startDate + 6. */
+export async function listMealPlanSpans(): Promise<MealPlanSpan[]> {
+  type SpanRow = { id: string; start_date: string; end_date: string | null };
+
+  const { data, error } = await supabase
+    .from("meal_plans")
+    .select("id,start_date,end_date")
+    .not("start_date", "is", null)
+    .order("start_date", { ascending: false })
+    .returns<SpanRow[]>();
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    startDate: row.start_date,
+    endDate: row.end_date ?? getWeekEndIso(row.start_date),
+  }));
 }
 
 /** Remove the saved name from a plan (un-bookmark it). The plan and its items are kept. */

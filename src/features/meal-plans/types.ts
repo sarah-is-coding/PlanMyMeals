@@ -57,3 +57,10 @@ export type SavedMealPlan = {
   startDate: string;
   endDate: string | null;
 };
+
+/** Lightweight record for rendering plan spans on the browse calendar. */
+export type MealPlanSpan = {
+  id: string;
+  startDate: string;
+  endDate: string; // always populated (legacy rows fall back to startDate + 6)
+};

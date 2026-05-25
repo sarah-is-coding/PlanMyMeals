@@ -93,7 +93,7 @@ export default function SavedMealPlansPage() {
           <p>You haven't saved any meal plans yet.</p>
           <p className="saved-plans-empty__hint">
             Open the <strong>Meal Plans</strong> page, browse a past week, and click{" "}
-            <em>Save as template…</em> to bookmark it here.
+            <em>Save as Meal Plan…</em> to bookmark it here.
           </p>
         </div>
       )}

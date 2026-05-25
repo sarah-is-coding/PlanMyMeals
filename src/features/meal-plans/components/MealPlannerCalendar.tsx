@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   MEAL_PLAN_ITEM_DRAG_MIME_TYPE,
   MEAL_TYPE_OPTIONS,
@@ -121,6 +121,9 @@ export default function MealPlannerCalendar({
       <header className="meal-calendar__header">
         <div>
           <h1>Meal Planner</h1>
+          <Link to="/app/saved-meal-plans" className="meal-calendar__manage-link">
+            Manage Saved Plans
+          </Link>
           <p>{weekLabel}</p>
         </div>
         <div className="meal-calendar__actions">

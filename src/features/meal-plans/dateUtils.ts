@@ -67,3 +67,7 @@ export function formatWeekRangeLabel(weekStartIso: string): string {
   const weekEndDate = addDays(weekStartDate, 6);
   return `${monthDayYearFormatter.format(weekStartDate)} - ${monthDayYearFormatter.format(weekEndDate)}`;
 }
+
+export function formatDateRange(startIso: string, endIso: string): string {
+  return `${monthDayYearFormatter.format(createDateFromIso(startIso))} – ${monthDayYearFormatter.format(createDateFromIso(endIso))}`;
+}
