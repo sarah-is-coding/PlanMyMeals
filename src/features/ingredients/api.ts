@@ -15,6 +15,20 @@ const mapIngredientRow = (row: IngredientRow): Ingredient => ({
   defaultUnit: row.default_unit,
 });
 
+const getIngredientByName = async (name: string): Promise<Ingredient | null> => {
+  const { data, error } = await supabase
+    .from("ingredients")
+    .select("id,name,category,default_unit")
+    .eq("name", name)
+    .maybeSingle<IngredientRow>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? mapIngredientRow(data) : null;
+};
+
 export async function searchIngredients(
   term: string,
   limit = 8
@@ -50,18 +64,9 @@ export async function createIngredient(
     throw new Error("Ingredient name is required.");
   }
 
-  const { data: existingIngredient, error: existingError } = await supabase
-    .from("ingredients")
-    .select("id,name,category,default_unit")
-    .eq("name", normalized)
-    .maybeSingle<IngredientRow>();
-
-  if (existingError) {
-    throw new Error(existingError.message);
-  }
-
+  const existingIngredient = await getIngredientByName(normalized);
   if (existingIngredient) {
-    return mapIngredientRow(existingIngredient);
+    return existingIngredient;
   }
 
   const { data, error } = await supabase
@@ -71,6 +76,13 @@ export async function createIngredient(
     .single<IngredientRow>();
 
   if (error) {
+    if (error.code === "23505" || error.message.includes("duplicate key")) {
+      const ingredient = await getIngredientByName(normalized);
+      if (ingredient) {
+        return ingredient;
+      }
+    }
+
     throw new Error(error.message);
   }
 

@@ -204,6 +204,29 @@ describe("createIngredient", () => {
     });
   });
 
+  it("returns the existing ingredient when a concurrent insert creates it first", async () => {
+    db.maybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: createdRow, error: null });
+    db.single.mockResolvedValueOnce({
+      data: null,
+      error: {
+        code: "23505",
+        message:
+          'duplicate key value violates unique constraint "ingredients_name_key"',
+      },
+    });
+
+    const result = await createIngredient("garlic", "produce");
+
+    expect(result).toEqual({
+      id: "new-id",
+      name: "garlic",
+      category: "produce",
+      defaultUnit: null,
+    });
+  });
+
   it("returns a mapped Ingredient from the database row", async () => {
     const result = await createIngredient("garlic", "produce");
     expect(result).toEqual({

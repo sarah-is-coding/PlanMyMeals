@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { mapImportedRecipeToInput } from "../../../../features/recipes/utils/recipeImport";
+import {
+  formatImportedInstructions,
+  mapImportedRecipeToInput,
+} from "../../../../features/recipes/utils/recipeImport";
 import type { ImportedRecipe } from "../../../../features/recipes/importTypes";
 
 const importedRecipe: ImportedRecipe = {
@@ -47,4 +50,25 @@ describe("recipe import mapping", () => {
     });
   });
 
+  it("formats numbered imported instructions onto separate lines", () => {
+    expect(
+      formatImportedInstructions(
+        "1. Make the meatballs. 2. Make the tomato sauce. 3. Simmer until cooked."
+      )
+    ).toBe(
+      "1. Make the meatballs.\n2. Make the tomato sauce.\n3. Simmer until cooked."
+    );
+  });
+
+  it("stores imported recipe instructions with readable numbered line breaks", () => {
+    const input = mapImportedRecipeToInput({
+      ...importedRecipe,
+      instructions:
+        "1. Make the meatballs. 2. Make the tomato sauce. 3. Simmer until cooked.",
+    });
+
+    expect(input.instructions).toBe(
+      "1. Make the meatballs.\n2. Make the tomato sauce.\n3. Simmer until cooked."
+    );
+  });
 });

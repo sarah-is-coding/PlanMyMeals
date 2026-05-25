@@ -12,6 +12,18 @@ const normalizeNumberText = (value: number | null): string =>
 const normalizeText = (value: string | null | undefined): string =>
   (value ?? "").trim();
 
+export const formatImportedInstructions = (value: string): string => {
+  const normalized = normalizeText(value).replace(/\s+/g, " ");
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized
+    .replace(/\s+(\d+\.\s+)/g, "\n$1")
+    .replace(/^\n+/, "")
+    .trim();
+};
+
 export const isIngredientCategory = (
   value: string | null | undefined
 ): value is IngredientCategory =>
@@ -27,7 +39,7 @@ export const mapImportedRecipeToInput = (
   cookMinutes: recipe.cookMinutes,
   servings: recipe.servings,
   tags: recipe.tags,
-  instructions: normalizeText(recipe.instructions),
+  instructions: formatImportedInstructions(recipe.instructions),
   ingredients: recipe.ingredients.map((ingredient) => ({
     ingredientId: "",
     ingredientName: normalizeText(ingredient.ingredientName),
@@ -47,7 +59,7 @@ export const mapImportedRecipeToFormValues = (
   cookMinutes: normalizeNumberText(recipe.cookMinutes),
   servings: normalizeNumberText(recipe.servings),
   tags: recipe.tags.join(", "),
-  instructions: normalizeText(recipe.instructions),
+  instructions: formatImportedInstructions(recipe.instructions),
   ingredients:
     recipe.ingredients.length > 0
       ? recipe.ingredients.map((ingredient) => ({

@@ -210,7 +210,7 @@ Return concise JSON matching the provided schema. Extract every distinct recipe 
 Rules:
 - Do not invent exact quantities, times, or servings. Use null or empty strings when missing.
 - Preserve user modifications from notes over website defaults.
-- Keep instructions text-first and compact, with numbered steps when available.
+- Keep instructions text-first and compact. Format instructions as newline-separated numbered steps: "1. ...\n2. ...\n3. ...". Do not return all steps in one paragraph.
 - Instructions must be fully self-contained. Never write "according to the source recipe", "follow the source recipe", "see source", "as directed", "per package", or any wording that requires opening the URL.
 - If a source step references another recipe, package, video, or external page, rewrite it into direct cooking instructions using the available text. If details are unavailable, state the missing detail plainly in warnings instead of referencing the source.
 - Include ingredient details directly in the steps when needed. A user must be able to cook from the saved recipe without visiting sourceUrl.
