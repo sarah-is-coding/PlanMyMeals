@@ -103,6 +103,7 @@ export default function RecipeAssignmentPanel({
   const [draftServings, setDraftServings] = useState("");
   const [popupPlacement, setPopupPlacement] = useState<"above" | "below">("above");
   const [popupMaxHeightPx, setPopupMaxHeightPx] = useState<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const targetAnchorRef = useRef<HTMLDivElement | null>(null);
   const targetPopupRef = useRef<HTMLElement | null>(null);
 
@@ -333,12 +334,26 @@ export default function RecipeAssignmentPanel({
       <label className="recipe-search" htmlFor="meal-plan-recipe-search">
         <span className="sr-only">Search recipes</span>
         <input
+          ref={searchInputRef}
           id="meal-plan-recipe-search"
           type="search"
           placeholder="Search recipes..."
           value={searchInput}
           onChange={(event) => onSearchInputChange(event.target.value)}
         />
+        {searchInput && (
+          <button
+            type="button"
+            className="recipe-search__clear"
+            aria-label="Clear recipe search"
+            onClick={() => {
+              onSearchInputChange("");
+              searchInputRef.current?.focus();
+            }}
+          >
+            &times;
+          </button>
+        )}
       </label>
 
       {error ? <p className="error">{error}</p> : null}
