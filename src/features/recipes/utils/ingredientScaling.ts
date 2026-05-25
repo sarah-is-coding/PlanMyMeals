@@ -3,7 +3,7 @@ import type { RecipeFormIngredient } from "./recipeForm";
 const normalizeQuantityText = (value: string): string =>
   value.replace(/\s+/g, " ").trim();
 
-const parseQuantityNumber = (value: string): number | null => {
+export const parseQuantityNumber = (value: string): number | null => {
   const normalized = normalizeQuantityText(value);
   if (!normalized) {
     return null;

@@ -2,6 +2,7 @@ import type { RecipeDetail, RecipeUpsertInput } from "../types";
 
 export type RecipeFormIngredient = {
   id: string;
+  ingredientId: string;
   ingredientName: string;
   quantity: string;
   unit: string;
@@ -58,6 +59,7 @@ const createClientId = (): string => {
 
 export const createEmptyIngredient = (): RecipeFormIngredient => ({
   id: createClientId(),
+  ingredientId: "",
   ingredientName: "",
   quantity: "",
   unit: "",
@@ -89,6 +91,7 @@ export const mapRecipeDetailToFormValues = (recipe: RecipeDetail): RecipeFormVal
     recipe.ingredients.length > 0
       ? recipe.ingredients.map((ingredient) => ({
           id: ingredient.id,
+          ingredientId: ingredient.ingredientId,
           ingredientName: ingredient.ingredientName,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
@@ -109,6 +112,7 @@ export const mapRecipeFormValuesToInput = (
   tags: parseTags(values.tags),
   instructions: values.instructions,
   ingredients: values.ingredients.map((ingredient) => ({
+    ingredientId: ingredient.ingredientId,
     ingredientName: ingredient.ingredientName,
     quantity: ingredient.quantity,
     unit: ingredient.unit,

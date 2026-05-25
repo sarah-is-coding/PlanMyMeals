@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(supabase --version)",
+      "Bash(Get-Date -Format \"yyyyMMddHHmmss\")"
+    ]
+  }
+}

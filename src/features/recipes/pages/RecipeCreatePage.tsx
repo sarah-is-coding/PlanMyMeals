@@ -10,7 +10,7 @@ import {
 } from "../utils/recipeForm";
 
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
-type RecipeIngredientFieldName = "ingredientName" | "quantity" | "unit" | "notes";
+type RecipeIngredientFieldName = "quantity" | "unit" | "notes";
 
 type RecipeCreateLocationState = {
   prefillTitle?: string;
@@ -48,6 +48,21 @@ export default function RecipeCreatePage() {
       ...previousValues,
       ingredients: previousValues.ingredients.map((ingredient) =>
         ingredient.id === ingredientId ? { ...ingredient, [field]: value } : ingredient
+      ),
+    }));
+  };
+
+  const handleIngredientSelect = (
+    rowId: string,
+    ingredientId: string,
+    name: string
+  ) => {
+    setValues((previousValues) => ({
+      ...previousValues,
+      ingredients: previousValues.ingredients.map((ingredient) =>
+        ingredient.id === rowId
+          ? { ...ingredient, ingredientId, ingredientName: name }
+          : ingredient
       ),
     }));
   };
@@ -103,6 +118,7 @@ export default function RecipeCreatePage() {
           readOnly={false}
           onFieldChange={handleFieldChange}
           onIngredientChange={handleIngredientChange}
+          onIngredientSelect={handleIngredientSelect}
           onAddIngredient={handleAddIngredient}
           onRemoveIngredient={handleRemoveIngredient}
         />

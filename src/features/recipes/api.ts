@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
+import { parseQuantityNumber } from "./utils/ingredientScaling";
 import type {
   RecipeDetail,
   RecipeIngredient,
@@ -33,6 +34,7 @@ type RecipeDetailRow = {
 
 type RecipeIngredientRow = {
   id: string;
+  ingredient_id: string;
   ingredient_name: string;
   quantity: string | null;
   unit: string | null;
@@ -56,6 +58,7 @@ const mapRecipeSummaryRow = (row: RecipeSummaryRow): RecipeSummary => ({
 
 const mapRecipeIngredientRow = (row: RecipeIngredientRow): RecipeIngredient => ({
   id: row.id,
+  ingredientId: row.ingredient_id,
   ingredientName: row.ingredient_name,
   quantity: row.quantity ?? "",
   unit: row.unit ?? "",
@@ -95,14 +98,25 @@ const getRecipePayload = (input: RecipeUpsertInput, userId: string) => ({
 
 const getIngredientPayload = (recipeId: string, input: RecipeUpsertInput) =>
   input.ingredients
-    .map((ingredient) => ({
-      recipe_id: recipeId,
-      ingredient_name: ingredient.ingredientName.trim(),
-      quantity: cleanText(ingredient.quantity),
-      unit: cleanText(ingredient.unit),
-      notes: cleanText(ingredient.notes),
-    }))
-    .filter((ingredient) => ingredient.ingredient_name.length > 0);
+    .map((ingredient) => {
+      const quantityText = cleanText(ingredient.quantity);
+      const quantityNumeric = quantityText
+        ? parseQuantityNumber(quantityText)
+        : null;
+      return {
+        recipe_id: recipeId,
+        ingredient_id: ingredient.ingredientId,
+        ingredient_name: ingredient.ingredientName.trim(),
+        quantity: quantityText,
+        quantity_numeric: quantityNumeric,
+        unit: cleanText(ingredient.unit),
+        notes: cleanText(ingredient.notes),
+      };
+    })
+    .filter(
+      (ingredient) =>
+        ingredient.ingredient_name.length > 0 && ingredient.ingredient_id
+    );
 
 async function requireUserId(): Promise<string> {
   const {
@@ -209,7 +223,7 @@ export async function getRecipeById(recipeId: string): Promise<RecipeDetail | nu
 
   const { data: ingredientRows, error: ingredientError } = await supabase
     .from("recipe_ingredients")
-    .select("id,ingredient_name,quantity,unit,notes")
+    .select("id,ingredient_id,ingredient_name,quantity,unit,notes")
     .eq("recipe_id", recipeId)
     .order("created_at", { ascending: true })
     .returns<RecipeIngredientRow[]>();

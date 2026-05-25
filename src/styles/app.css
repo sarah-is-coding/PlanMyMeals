@@ -1079,6 +1079,145 @@
   justify-self: flex-start;
 }
 
+/* ── Ingredient name combobox ─────────────────────────────── */
+.ingredient-combobox {
+  position: relative;
+}
+
+.ingredient-combobox input {
+  width: 100%;
+  border: 1px solid var(--alpha-slate-62);
+  background: var(--color-white);
+  border-radius: 0.78rem;
+  padding: 0.72rem 0.82rem;
+  color: var(--ink);
+  font-size: 0.96rem;
+  box-sizing: border-box;
+}
+
+.ingredient-combobox input:focus {
+  outline: none;
+  border-color: var(--alpha-brand-dark-78);
+  box-shadow: 0 0 0 3px var(--alpha-brand-20);
+}
+
+.ingredient-combobox__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  background: var(--color-white);
+  border: 1px solid var(--alpha-slate-42);
+  border-radius: 0.78rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.ingredient-combobox__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.88rem;
+  cursor: pointer;
+  font-size: 0.94rem;
+  color: var(--color-ink);
+}
+
+.ingredient-combobox__option--active {
+  background: var(--alpha-brand-12);
+}
+
+.ingredient-combobox__option--add {
+  color: var(--color-brand-dark);
+  font-weight: 600;
+  border-top: 1px solid var(--alpha-slate-33);
+  margin-top: 0.2rem;
+  padding-top: 0.7rem;
+}
+
+.ingredient-combobox__category {
+  font-size: 0.78rem;
+  color: var(--color-muted-soft);
+  white-space: nowrap;
+}
+
+.ingredient-combobox__hint {
+  padding: 0.6rem 0.88rem;
+  font-size: 0.88rem;
+  color: var(--color-muted-soft);
+}
+
+/* ── Category picker (phase 2) ────────────────────────────── */
+.ingredient-combobox__categorize {
+  padding: 0.6rem 0.72rem 0.72rem;
+}
+
+.ingredient-combobox__categorize-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.ingredient-combobox__back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--color-brand-dark);
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ingredient-combobox__back:hover {
+  text-decoration: underline;
+}
+
+.ingredient-combobox__categorize-label {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ingredient-combobox__category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.ingredient-combobox__pill {
+  border: 1px solid var(--alpha-brand-dark-50);
+  background: var(--alpha-brand-12);
+  color: var(--color-brand-dark);
+  border-radius: 2rem;
+  padding: 0.3rem 0.72rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+}
+
+.ingredient-combobox__pill:hover:not(:disabled),
+.ingredient-combobox__pill--active {
+  background: var(--alpha-brand-20);
+  border-color: var(--color-brand-dark);
+}
+
+.ingredient-combobox__pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .recipe-form__actions {
   display: flex;
   gap: 0.56rem;

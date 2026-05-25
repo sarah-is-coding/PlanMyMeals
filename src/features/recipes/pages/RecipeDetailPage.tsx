@@ -13,7 +13,7 @@ import {
 import { scaleRecipeFormIngredientQuantities } from "../utils/ingredientScaling";
 
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
-type RecipeIngredientFieldName = "ingredientName" | "quantity" | "unit" | "notes";
+type RecipeIngredientFieldName = "quantity" | "unit" | "notes";
 type RecipeDetailLocationState = {
   from?: "meal-planner";
   mealPlanItemId?: string;
@@ -132,6 +132,25 @@ export default function RecipeDetailPage() {
             ingredients: previousValues.ingredients.map((ingredient) =>
               ingredient.id === ingredientId
                 ? { ...ingredient, [field]: value }
+                : ingredient
+            ),
+          }
+        : previousValues
+    );
+  };
+
+  const handleIngredientSelect = (
+    rowId: string,
+    ingredientId: string,
+    name: string
+  ) => {
+    setFormValues((previousValues) =>
+      previousValues
+        ? {
+            ...previousValues,
+            ingredients: previousValues.ingredients.map((ingredient) =>
+              ingredient.id === rowId
+                ? { ...ingredient, ingredientId, ingredientName: name }
                 : ingredient
             ),
           }
@@ -330,6 +349,7 @@ export default function RecipeDetailPage() {
             readOnly={false}
             onFieldChange={handleFieldChange}
             onIngredientChange={handleIngredientChange}
+            onIngredientSelect={handleIngredientSelect}
             onAddIngredient={handleAddIngredient}
             onRemoveIngredient={handleRemoveIngredient}
           />

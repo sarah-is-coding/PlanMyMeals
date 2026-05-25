@@ -2,21 +2,24 @@ import type {
   RecipeFormIngredient,
   RecipeFormValues,
 } from "../utils/recipeForm";
+import IngredientNameCombobox from "./IngredientNameCombobox";
 
+// Excludes id, ingredientId, and ingredientName — those are handled by onIngredientSelect
+type RecipeIngredientFieldName = "quantity" | "unit" | "notes";
 type RecipeFieldName = Exclude<keyof RecipeFormValues, "ingredients">;
-type RecipeIngredientFieldName = Exclude<keyof RecipeFormIngredient, "id">;
 
 type RecipeFormFieldsProps = {
   values: RecipeFormValues;
   readOnly: boolean;
   onFieldChange: (field: RecipeFieldName, value: string) => void;
   onIngredientChange: (
-    ingredientId: string,
+    rowId: string,
     field: RecipeIngredientFieldName,
     value: string
   ) => void;
+  onIngredientSelect: (rowId: string, ingredientId: string, name: string) => void;
   onAddIngredient: () => void;
-  onRemoveIngredient: (ingredientId: string) => void;
+  onRemoveIngredient: (rowId: string) => void;
 };
 
 export default function RecipeFormFields({
@@ -24,6 +27,7 @@ export default function RecipeFormFields({
   readOnly,
   onFieldChange,
   onIngredientChange,
+  onIngredientSelect,
   onAddIngredient,
   onRemoveIngredient,
 }: RecipeFormFieldsProps) {
@@ -131,24 +135,19 @@ export default function RecipeFormFields({
         </div>
 
         <div className="recipe-ingredients__list">
-          {values.ingredients.map((ingredient) => (
+          {values.ingredients.map((ingredient: RecipeFormIngredient) => (
             <article className="recipe-ingredient-card" key={ingredient.id}>
               <div className="recipe-ingredient-card__grid">
-                <label className="recipe-field recipe-field--full">
+                <div className="recipe-field recipe-field--full">
                   <span>Ingredient</span>
-                  <input
-                    type="text"
+                  <IngredientNameCombobox
                     value={ingredient.ingredientName}
-                    onChange={(event) =>
-                      onIngredientChange(
-                        ingredient.id,
-                        "ingredientName",
-                        event.target.value
-                      )
+                    onSelect={(ingredientId, name) =>
+                      onIngredientSelect(ingredient.id, ingredientId, name)
                     }
                     readOnly={readOnly}
                   />
-                </label>
+                </div>
 
                 <label className="recipe-field">
                   <span>Quantity</span>
