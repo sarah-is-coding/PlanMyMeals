@@ -306,7 +306,7 @@ export default function RecipeDetailPage() {
 
   return (
     <section
-      className={`workspace-route recipe-route${editing ? " recipe-route--editing" : ""}`}
+      className={`workspace-route recipe-route${editing ? " recipe-route--sticky-actions" : ""}`}
     >
       <article className="workspace-card">
         <div className="recipe-page-header">
@@ -392,7 +392,7 @@ export default function RecipeDetailPage() {
         />
       )}
       {editing ? (
-        <div className="recipe-edit-sticky-actions" aria-label="Recipe edit actions">
+        <div className="recipe-sticky-actions" aria-label="Recipe edit actions">
           <button
             type="submit"
             form="recipe-edit-form"

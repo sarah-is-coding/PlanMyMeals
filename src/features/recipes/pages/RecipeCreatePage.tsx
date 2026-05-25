@@ -107,7 +107,7 @@ export default function RecipeCreatePage() {
   };
 
   return (
-    <section className="workspace-route recipe-route">
+    <section className="workspace-route recipe-route recipe-route--sticky-actions">
       <article className="workspace-card">
         <div className="recipe-page-header">
           <h1>Add Recipe</h1>
@@ -119,7 +119,11 @@ export default function RecipeCreatePage() {
         {error ? <p className="error">{error}</p> : null}
       </article>
 
-      <form className="workspace-card recipe-form" onSubmit={handleSubmit}>
+      <form
+        id="recipe-create-form"
+        className="workspace-card recipe-form"
+        onSubmit={handleSubmit}
+      >
         <RecipeFormFields
           values={values}
           readOnly={false}
@@ -139,6 +143,16 @@ export default function RecipeCreatePage() {
           </Link>
         </div>
       </form>
+      <div className="recipe-sticky-actions" aria-label="Recipe create actions">
+        <button
+          type="submit"
+          form="recipe-create-form"
+          className="btn btn--primary"
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save Recipe"}
+        </button>
+      </div>
     </section>
   );
 }

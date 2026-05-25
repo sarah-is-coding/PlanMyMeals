@@ -757,7 +757,7 @@
   gap: 0.85rem;
 }
 
-.recipe-route--editing {
+.recipe-route--sticky-actions {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
@@ -1373,7 +1373,7 @@
   flex-wrap: wrap;
 }
 
-.recipe-edit-sticky-actions {
+.recipe-sticky-actions {
   position: fixed;
   left: 50%;
   bottom: max(0.85rem, env(safe-area-inset-bottom));
@@ -1388,7 +1388,7 @@
   backdrop-filter: blur(18px);
 }
 
-.recipe-edit-sticky-actions .btn {
+.recipe-sticky-actions .btn {
   width: 100%;
   justify-content: center;
 }
