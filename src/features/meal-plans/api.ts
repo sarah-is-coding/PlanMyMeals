@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
-import { getWeekEndIso, toIsoDate } from "./dateUtils";
+import { getWeekEndIso, getWeekStartIso, toIsoDate } from "./dateUtils";
 import type {
   AddMealPlanItemInput,
   MealPlanDayPreview,
@@ -7,6 +7,7 @@ import type {
   MealPlannerRecipeSummary,
   MoveMealPlanItemInput,
   MealType,
+  SavedMealPlan,
   UpdateMealPlanItemServingsInput,
 } from "./types";
 
@@ -376,4 +377,215 @@ export async function copyWeekPlan(
   }
 
   return (data ?? []).map(mapMealPlanItemRow);
+}
+
+// ── Saved meal plans ───────────────────────────────────────────────────────
+
+type SavedMealPlanRow = {
+  id: string;
+  saved_name: string;
+  start_date: string;
+  end_date: string | null;
+};
+
+function mapSavedPlanRow(row: SavedMealPlanRow): SavedMealPlan {
+  return {
+    id: row.id,
+    savedName: row.saved_name,
+    startDate: row.start_date,
+    endDate: row.end_date,
+  };
+}
+
+/** Name (and thereby bookmark) an existing week's meal plan. Creates the plan row first if needed. */
+export async function saveWeekPlan(weekStartIso: string, savedName: string): Promise<SavedMealPlan> {
+  const planId = await ensureMealPlanIdForWeek(weekStartIso);
+
+  const { data, error } = await supabase
+    .from("meal_plans")
+    .update({ saved_name: savedName.trim() })
+    .eq("id", planId)
+    .select("id,saved_name,start_date,end_date")
+    .single<SavedMealPlanRow>();
+
+  if (error) throw new Error(error.message);
+  return mapSavedPlanRow(data);
+}
+
+/** Remove the saved name from a plan (un-bookmark it). The plan and its items are kept. */
+export async function unsaveMealPlan(planId: string): Promise<void> {
+  const { error } = await supabase
+    .from("meal_plans")
+    .update({ saved_name: null })
+    .eq("id", planId)
+    .returns<null>();
+
+  if (error) throw new Error(error.message);
+}
+
+/** Change the name of an already-saved plan. */
+export async function renameSavedMealPlan(planId: string, newName: string): Promise<SavedMealPlan> {
+  const { data, error } = await supabase
+    .from("meal_plans")
+    .update({ saved_name: newName.trim() })
+    .eq("id", planId)
+    .select("id,saved_name,start_date,end_date")
+    .single<SavedMealPlanRow>();
+
+  if (error) throw new Error(error.message);
+  return mapSavedPlanRow(data);
+}
+
+/** Permanently delete a saved plan and all of its meal plan items (cascade). */
+export async function deleteSavedMealPlan(planId: string): Promise<void> {
+  const { error } = await supabase
+    .from("meal_plans")
+    .delete()
+    .eq("id", planId)
+    .returns<null>();
+
+  if (error) throw new Error(error.message);
+}
+
+/** List all saved (named) plans for the current user, newest first. */
+export async function listSavedMealPlans(): Promise<SavedMealPlan[]> {
+  const { data, error } = await supabase
+    .from("meal_plans")
+    .select("id,saved_name,start_date,end_date")
+    .not("saved_name", "is", null)
+    .order("created_at", { ascending: false })
+    .returns<SavedMealPlanRow[]>();
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapSavedPlanRow);
+}
+
+/** Search saved plans whose name contains the given query (case-insensitive). */
+export async function searchSavedMealPlans(query: string): Promise<SavedMealPlan[]> {
+  const trimmed = query.trim();
+  let q = supabase
+    .from("meal_plans")
+    .select("id,saved_name,start_date,end_date")
+    .not("saved_name", "is", null)
+    .order("created_at", { ascending: false });
+
+  if (trimmed) {
+    q = q.ilike("saved_name", `%${trimmed}%`);
+  }
+
+  const { data, error } = await q.returns<SavedMealPlanRow[]>();
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapSavedPlanRow);
+}
+
+/** Preview a saved plan: returns recipe names grouped by day, in plan-day order. */
+export async function previewSavedMealPlan(planId: string): Promise<MealPlanDayPreview[]> {
+  type SavedPreviewRow = { planned_for: string; recipes: RecipeRelation };
+
+  const { data, error } = await supabase
+    .from("meal_plan_items")
+    .select("planned_for,recipes(title)")
+    .eq("meal_plan_id", planId)
+    .in("meal_type", MEAL_TYPES)
+    .order("planned_for", { ascending: true })
+    .order("created_at", { ascending: true })
+    .returns<SavedPreviewRow[]>();
+
+  if (error) throw new Error(error.message);
+
+  const byDate = new Map<string, string[]>();
+  for (const row of data ?? []) {
+    const title = getRecipeTitle(row.recipes);
+    const list = byDate.get(row.planned_for) ?? [];
+    list.push(title);
+    byDate.set(row.planned_for, list);
+  }
+
+  return Array.from(byDate.entries()).map(([dateIso, recipes]) => ({ dateIso, recipes }));
+}
+
+type SavedItemRow = {
+  recipe_id: string | null;
+  planned_for: string;
+  meal_type: MealType | "other";
+  servings_override: number | null;
+};
+
+/**
+ * Copy a saved plan's items to a target week (and any subsequent weeks if the plan spans
+ * more than 7 days).  Day offsets from the saved plan's start_date are preserved.
+ * Returns only the items that land within the target week, so the caller can update
+ * the displayed week's state without a full reload.
+ */
+export async function applySavedMealPlan(
+  savedPlanId: string,
+  targetWeekStartIso: string
+): Promise<MealPlanItem[]> {
+  // 1. Fetch the saved plan's anchor date.
+  const { data: planRow, error: planErr } = await supabase
+    .from("meal_plans")
+    .select("start_date")
+    .eq("id", savedPlanId)
+    .single<{ start_date: string }>();
+
+  if (planErr || !planRow) throw new Error(planErr?.message ?? "Saved plan not found.");
+
+  const anchorIso = planRow.start_date;
+
+  // 2. Fetch all items for the saved plan.
+  const { data: itemRows, error: itemErr } = await supabase
+    .from("meal_plan_items")
+    .select("recipe_id,planned_for,meal_type,servings_override")
+    .eq("meal_plan_id", savedPlanId)
+    .in("meal_type", MEAL_TYPES)
+    .order("planned_for", { ascending: true })
+    .returns<SavedItemRow[]>();
+
+  if (itemErr) throw new Error(itemErr.message);
+  if (!itemRows || itemRows.length === 0) return [];
+
+  // 3. Resolve which meal-plan record to use for each target week (create if needed).
+  const targetPlanIdCache = new Map<string, string>();
+  const getTargetPlanId = async (weekIso: string): Promise<string> => {
+    const cached = targetPlanIdCache.get(weekIso);
+    if (cached) return cached;
+    const id = await ensureMealPlanIdForWeek(weekIso);
+    targetPlanIdCache.set(weekIso, id);
+    return id;
+  };
+
+  // 4. Build inserts, grouping items by their computed target week.
+  const inserts: CopyItemInsert[] = [];
+  for (const item of itemRows) {
+    const dayOffset = daysBetweenIso(anchorIso, item.planned_for);
+    const targetDateIso = addDaysIso(targetWeekStartIso, dayOffset);
+    const [y, m, d] = targetDateIso.split("-").map(Number);
+    const targetWeekIso = getWeekStartIso(new Date(y, m - 1, d));
+    const targetPlanId = await getTargetPlanId(targetWeekIso);
+
+    inserts.push({
+      meal_plan_id: targetPlanId,
+      recipe_id: item.recipe_id,
+      planned_for: targetDateIso,
+      meal_type: item.meal_type as MealType,
+      servings_override: item.servings_override,
+    });
+  }
+
+  // 5. Insert all items in one batch.
+  const { data: inserted, error: insertErr } = await supabase
+    .from("meal_plan_items")
+    .insert(inserts)
+    .select("id,recipe_id,planned_for,meal_type,servings_override,recipes(title,servings)")
+    .returns<MealPlanItemRow[]>();
+
+  if (insertErr) throw new Error(insertErr.message);
+
+  // 6. Return only items that land in the requested target week (for immediate UI update).
+  const targetEndIso = getWeekEndIso(targetWeekStartIso);
+  return (inserted ?? [])
+    .map(mapMealPlanItemRow)
+    .filter(
+      (item) => item.plannedFor >= targetWeekStartIso && item.plannedFor <= targetEndIso
+    );
 }

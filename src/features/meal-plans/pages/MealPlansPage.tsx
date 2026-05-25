@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
   addMealPlanItem,
+  applySavedMealPlan,
   clearWeekPlan,
   copyWeekPlan,
   deleteMealPlanItem,
@@ -277,6 +279,23 @@ export default function MealPlansPage() {
     [weekStartIso]
   );
 
+  const handleApplySavedPlan = useCallback(
+    async (planId: string, mode: "add" | "replace") => {
+      setPlannerError(null);
+      if (mode === "replace") {
+        await clearWeekPlan(weekStartIso);
+      }
+      const newItems = await applySavedMealPlan(planId, weekStartIso);
+      setItems((current) => {
+        const base = mode === "replace" ? [] : current;
+        const next = [...base, ...newItems];
+        saveCachedMealPlanItems(weekStartIso, next);
+        return next;
+      });
+    },
+    [weekStartIso]
+  );
+
   const handleUpdateItemServings = useCallback(
     async (itemId: string, servingsOverride: number | null) => {
       const existingItem = items.find((item) => item.id === itemId);
@@ -315,7 +334,12 @@ export default function MealPlansPage() {
         title="Loading meal planner..."
         message="Preparing your calendar and saved meals."
       />
-      {plannerError ? <p className="error">{plannerError}</p> : null}
+      <div className="meal-planner-route__topbar">
+        {plannerError ? <p className="error">{plannerError}</p> : <span />}
+        <Link to="/app/saved-meal-plans" className="meal-planner-route__saved-link">
+          Manage saved plans →
+        </Link>
+      </div>
 
       <div className="meal-planner-layout">
         <MealPlannerCalendar
@@ -341,6 +365,7 @@ export default function MealPlansPage() {
             currentWeekHasItems={items.length > 0}
             onJumpToWeek={setWeekStartIso}
             onCopyToCurrentWeek={handleCopyWeekToCurrentWeek}
+            onApplySavedPlan={handleApplySavedPlan}
           />
           <RecipeAssignmentPanel
             recipes={recipes}

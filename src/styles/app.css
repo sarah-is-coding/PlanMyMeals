@@ -1965,3 +1965,322 @@
   }
 }
 
+/* ── Meal planner page topbar (error + saved-plans link) ─── */
+.meal-planner-route__topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  min-height: 1.6rem;
+}
+
+.meal-planner-route__saved-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.meal-planner-route__saved-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Browse-plans panel: tab switcher ────────────────────── */
+.past-plan-panel__tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--alpha-slate-38);
+  margin-bottom: 0.2rem;
+}
+
+.past-plan-panel__tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 0.42rem 0.6rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-muted-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.12s, border-color 0.12s;
+  margin-bottom: -1px;
+}
+
+.past-plan-panel__tab--active {
+  color: var(--color-brand-dark);
+  border-bottom-color: var(--color-brand-dark);
+}
+
+.past-plan-panel__tab:hover:not(.past-plan-panel__tab--active) {
+  color: var(--color-ink-soft);
+}
+
+/* ── Save-as-template inline flow ────────────────────────── */
+.past-plan-panel__save-btn {
+  align-self: start;
+  font-size: 0.83rem;
+}
+
+.past-plan-panel__save-done {
+  margin: 0;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+}
+
+.past-plan-panel__save-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.past-plan-panel__save-input {
+  width: 100%;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid var(--alpha-slate-44);
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  box-sizing: border-box;
+}
+
+.past-plan-panel__save-input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--alpha-brand-20);
+}
+
+/* ── Saved-plans search row ──────────────────────────────── */
+.past-plan-panel__search-row {
+  display: grid;
+}
+
+.past-plan-panel__search-input {
+  width: 100%;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid var(--alpha-slate-44);
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  box-sizing: border-box;
+}
+
+.past-plan-panel__search-input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--alpha-brand-20);
+}
+
+/* ── Saved-plan list in Browse panel ─────────────────────── */
+.saved-plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.saved-plan-list__item {
+  border: 1px solid var(--alpha-slate-38);
+  border-radius: 0.65rem;
+  overflow: hidden;
+}
+
+.saved-plan-list__btn {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.4rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.52rem 0.7rem;
+  background: var(--alpha-bg-248-85);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.saved-plan-list__btn:hover {
+  background: var(--alpha-brand-12);
+}
+
+.saved-plan-list__btn--active {
+  background: var(--alpha-brand-12);
+}
+
+.saved-plan-list__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-plan-list__range {
+  font-size: 0.75rem;
+  color: var(--color-muted-soft);
+  white-space: nowrap;
+}
+
+.saved-plan-list__chevron {
+  font-size: 0.65rem;
+  color: var(--color-muted-soft);
+  margin-left: 0.25rem;
+}
+
+.saved-plan-list__detail {
+  padding: 0.6rem 0.7rem 0.7rem;
+  background: var(--color-bg-base);
+  border-top: 1px solid var(--alpha-slate-33);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.past-plan-panel__preview--compact {
+  font-size: 0.8rem;
+}
+
+/* ── Saved Meal Plans management page ────────────────────── */
+.saved-plans-route {
+  max-width: 680px;
+}
+
+.saved-plans-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.4rem;
+}
+
+.saved-plans-back {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+  text-decoration: none;
+  align-self: start;
+}
+
+.saved-plans-back:hover {
+  text-decoration: underline;
+}
+
+.saved-plans-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--color-ink);
+}
+
+.saved-plans-empty {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.saved-plans-empty__hint {
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--color-muted-soft);
+}
+
+.saved-plans-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.saved-plans-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+}
+
+.saved-plans-list__main {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.saved-plans-list__name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.saved-plans-list__range {
+  font-size: 0.82rem;
+  color: var(--color-muted-soft);
+}
+
+.saved-plans-list__actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.saved-plans-list__confirm-label {
+  font-size: 0.84rem;
+  color: var(--color-ink-soft);
+}
+
+.saved-plans-list__rename {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.saved-plans-list__rename-input {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--alpha-slate-44);
+  border-radius: 0.55rem;
+  font-size: 0.95rem;
+  background: var(--color-bg-base);
+  color: var(--color-ink);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.saved-plans-list__rename-input:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--alpha-brand-20);
+}
+
+.saved-plans-list__rename-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+/* danger-ghost button variant (delete action) */
+.btn--danger-ghost {
+  color: var(--color-danger);
+}
+
+.btn--danger-ghost:hover {
+  background: rgba(185, 28, 28, 0.08);
+  border-color: rgba(185, 28, 28, 0.3);
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: var(--color-white);
+  border-color: var(--color-danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+

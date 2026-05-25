@@ -50,3 +50,10 @@ export type MealPlanDayPreview = {
   dateIso: string;
   recipes: string[];
 };
+
+export type SavedMealPlan = {
+  id: string;
+  savedName: string;
+  startDate: string;
+  endDate: string | null;
+};
