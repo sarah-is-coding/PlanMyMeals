@@ -9,6 +9,7 @@ import {
   uncheckAllGroceryItems,
 } from "../api";
 import type { GroceryList, GroceryListSummary } from "../types";
+import { groupItemsByCategory } from "../utils/groceryGeneration";
 
 type EditState = { id: string; value: string } | null;
 
