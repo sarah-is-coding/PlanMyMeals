@@ -197,13 +197,12 @@ export default function SavedGroceryListsPage() {
   };
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-  const formatDate = (iso: string) => {
-    const [y, m, d] = iso.split("-").map(Number);
+  const formatDate = (isoTimestamp: string) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    }).format(new Date(y, m - 1, d));
+    }).format(new Date(isoTimestamp));
   };
 
   return (
