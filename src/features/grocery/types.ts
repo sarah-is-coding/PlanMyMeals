@@ -1,9 +1,12 @@
+import type { IngredientCategory } from "../ingredients/types";
+
 export type GroceryItem = {
   id: string;
   ingredientName: string;
   quantity: string;
   unit: string;
   isChecked: boolean;
+  category: IngredientCategory | null;
 };
 
 export type GroceryList = {
@@ -26,6 +29,7 @@ export type GroceryItemDraft = {
   ingredientName: string;
   quantity: string;
   unit: string;
+  category: IngredientCategory | null;
 };
 
 /** Which meal plan the grocery page is currently pointed at. */

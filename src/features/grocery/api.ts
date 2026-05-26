@@ -1,4 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
+import type { IngredientCategory } from "../ingredients/types";
 import { scaleQuantityText } from "../recipes/utils/ingredientScaling";
 import { mergeIngredients } from "./utils/groceryGeneration";
 import type {
@@ -29,6 +30,7 @@ type RecipeIngRow = {
   ingredient_name: string;
   quantity: string | null;
   unit: string | null;
+  ingredients: { category: string | null } | null;
 };
 
 type GroceryListRow = {
@@ -44,6 +46,7 @@ type GroceryItemRow = {
   quantity: string | null;
   unit: string | null;
   is_checked: boolean;
+  category: string | null;
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -61,6 +64,7 @@ function mapItemRow(row: GroceryItemRow): GroceryItem {
     quantity: row.quantity ?? "",
     unit: row.unit ?? "",
     isChecked: row.is_checked,
+    category: (row.category ?? null) as IngredientCategory | null,
   };
 }
 
@@ -137,10 +141,10 @@ export async function buildGroceryItemsForPlan(
   );
   if (recipeIds.length === 0) return [];
 
-  // 3. Batch-fetch all recipe ingredients
+  // 3. Batch-fetch all recipe ingredients (including category via ingredient FK)
   const { data: ingRows, error: ingErr } = await supabase
     .from("recipe_ingredients")
-    .select("recipe_id, ingredient_name, quantity, unit")
+    .select("recipe_id, ingredient_name, quantity, unit, ingredients(category)")
     .in("recipe_id", recipeIds)
     .returns<RecipeIngRow[]>();
 
@@ -173,6 +177,7 @@ export async function buildGroceryItemsForPlan(
           effectiveServings
         ),
         unit: ing.unit ?? "",
+        category: (ing.ingredients?.category ?? null) as IngredientCategory | null,
       });
     }
   }
@@ -230,9 +235,10 @@ export async function saveGroceryList(
         quantity: item.quantity || null,
         unit: item.unit || null,
         is_checked: false,
+        category: item.category || null,
       }))
     )
-    .select("id, ingredient_name, quantity, unit, is_checked")
+    .select("id, ingredient_name, quantity, unit, is_checked, category")
     .returns<GroceryItemRow[]>();
 
   if (itemErr) throw new Error(itemErr.message);
@@ -252,7 +258,7 @@ export async function getGroceryList(listId: string): Promise<GroceryList | null
 
   const { data: itemRows, error: itemErr } = await supabase
     .from("grocery_items")
-    .select("id, ingredient_name, quantity, unit, is_checked")
+    .select("id, ingredient_name, quantity, unit, is_checked, category")
     .eq("list_id", listId)
     .order("created_at", { ascending: true })
     .returns<GroceryItemRow[]>();

@@ -2629,6 +2629,28 @@
   gap: 0.45rem;
 }
 
+/* Category sections */
+.grocery-item-groups {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.grocery-category {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.grocery-category__header {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-muted-soft);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--alpha-slate-33);
+}
+
 /* Checklist */
 .grocery-item-list {
   list-style: none;

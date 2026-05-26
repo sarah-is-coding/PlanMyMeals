@@ -8,6 +8,7 @@ import {
 } from "../api";
 import GroceryPlanBrowser from "../components/GroceryPlanBrowser";
 import type { GroceryItemDraft, GroceryList, GrocerySource } from "../types";
+import { groupItemsByCategory } from "../utils/groceryGeneration";
 import { formatDateRange, formatWeekRangeLabel, getWeekStartIso, shiftWeekStartIso } from "../../meal-plans/dateUtils";
 import type { SavedMealPlan } from "../../meal-plans/types";
 
@@ -309,7 +310,7 @@ export default function GroceryPage() {
           {!hasList && !generating && (
             <article className="workspace-card grocery-empty-state">
               <p>
-                Select a week or saved plan above, then click{" "}
+                Select a week or saved plan, then click{" "}
                 <strong>Build Grocery List</strong> to generate your shopping
                 list.
               </p>
@@ -414,50 +415,62 @@ export default function GroceryPage() {
                   have ingredients added.
                 </p>
               ) : (
-                <ul className="grocery-item-list" aria-label="Grocery items">
-                  {displayItems.map((item, idx) => {
+                <div className="grocery-item-groups">
+                  {groupItemsByCategory(displayItems).map((group) => {
                     const isDB = savedList !== null;
                     return (
-                      <li
-                        key={item.id}
-                        className={`grocery-item${
-                          item.isChecked ? " grocery-item--checked" : ""
-                        }`}
-                      >
-                        <label className="grocery-item__label">
-                          <input
-                            type="checkbox"
-                            className="grocery-item__checkbox"
-                            checked={item.isChecked}
-                            disabled={
-                              isDB ? togglingId === item.id : false
-                            }
-                            onChange={(e) => {
-                              if (isDB) {
-                                void handleToggleSavedItem(
-                                  item.id,
-                                  e.target.checked
-                                );
-                              } else {
-                                handleLocalToggle(idx);
-                              }
-                            }}
-                          />
-                          <span className="grocery-item__name">
-                            {item.ingredientName}
-                          </span>
-                          {(item.quantity || item.unit) && (
-                            <span className="grocery-item__amount">
-                              {[item.quantity, item.unit]
-                                .filter(Boolean)
-                                .join(" ")}
-                            </span>
-                          )}
-                        </label>
-                      </li>
+                      <div key={group.label} className="grocery-category">
+                        <h3 className="grocery-category__header">
+                          {group.label}
+                        </h3>
+                        <ul
+                          className="grocery-item-list"
+                          aria-label={`${group.label} items`}
+                        >
+                          {group.items.map((item) => (
+                            <li
+                              key={item.id}
+                              className={`grocery-item${
+                                item.isChecked ? " grocery-item--checked" : ""
+                              }`}
+                            >
+                              <label className="grocery-item__label">
+                                <input
+                                  type="checkbox"
+                                  className="grocery-item__checkbox"
+                                  checked={item.isChecked}
+                                  disabled={isDB ? togglingId === item.id : false}
+                                  onChange={(e) => {
+                                    if (isDB) {
+                                      void handleToggleSavedItem(
+                                        item.id,
+                                        e.target.checked
+                                      );
+                                    } else {
+                                      handleLocalToggle(
+                                        displayItems.indexOf(item)
+                                      );
+                                    }
+                                  }}
+                                />
+                                <span className="grocery-item__name">
+                                  {item.ingredientName}
+                                </span>
+                                {(item.quantity || item.unit) && (
+                                  <span className="grocery-item__amount">
+                                    {[item.quantity, item.unit]
+                                      .filter(Boolean)
+                                      .join(" ")}
+                                  </span>
+                                )}
+                              </label>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               )}
             </article>
           )}

@@ -97,20 +97,21 @@ describe("buildGroceryItemsForPlan", () => {
         ],
         error: null,
       })
-      // Recipe ingredients
+      // Recipe ingredients (with category via ingredients FK)
       .mockResolvedValueOnce({
         data: [
-          { recipe_id: "recipe-1", ingredient_name: "flour", quantity: "2", unit: "cup" },
-          { recipe_id: "recipe-1", ingredient_name: "eggs", quantity: "4", unit: "" },
+          { recipe_id: "recipe-1", ingredient_name: "flour", quantity: "2", unit: "cup", ingredients: { category: "pantry" } },
+          { recipe_id: "recipe-1", ingredient_name: "eggs", quantity: "4", unit: "", ingredients: { category: "dairy & eggs" } },
         ],
         error: null,
       });
 
     const result = await buildGroceryItemsForPlan("plan-1");
+    // Sorted by category: dairy & eggs(2) < pantry(6)
     // Scaled to 2/4 = 0.5x: flour 2→1 cup, eggs 4→2
     expect(result).toEqual([
-      { ingredientName: "eggs",  quantity: "2", unit: "" },
-      { ingredientName: "flour", quantity: "1", unit: "cup" },
+      { ingredientName: "eggs",  quantity: "2", unit: "", category: "dairy & eggs" },
+      { ingredientName: "flour", quantity: "1", unit: "cup", category: "pantry" },
     ]);
   });
 
@@ -126,7 +127,7 @@ describe("buildGroceryItemsForPlan", () => {
       })
       .mockResolvedValueOnce({
         data: [
-          { recipe_id: "recipe-1", ingredient_name: "butter", quantity: "4", unit: "tbsp" },
+          { recipe_id: "recipe-1", ingredient_name: "butter", quantity: "4", unit: "tbsp", ingredients: { category: "dairy & eggs" } },
         ],
         error: null,
       });
@@ -134,7 +135,7 @@ describe("buildGroceryItemsForPlan", () => {
     const result = await buildGroceryItemsForPlan("plan-1");
     // 4 × 0.5 + 4 × 1 = 2 + 4 = 6
     expect(result).toEqual([
-      { ingredientName: "butter", quantity: "6", unit: "tbsp" },
+      { ingredientName: "butter", quantity: "6", unit: "tbsp", category: "dairy & eggs" },
     ]);
   });
 
@@ -184,12 +185,12 @@ describe("saveGroceryList", () => {
     builder.single.mockResolvedValueOnce({ data: fakeListRow, error: null });
 
     const fakeItemRows = [
-      { id: "item-1", ingredient_name: "salt", quantity: "1", unit: "tsp", is_checked: false },
+      { id: "item-1", ingredient_name: "salt", quantity: "1", unit: "tsp", is_checked: false, category: "pantry" },
     ];
     builder.returns.mockResolvedValueOnce({ data: fakeItemRows, error: null });
 
     const result = await saveGroceryList("My List", "plan-1", [
-      { ingredientName: "salt", quantity: "1", unit: "tsp" },
+      { ingredientName: "salt", quantity: "1", unit: "tsp", category: "pantry" },
     ]);
 
     expect(result.id).toBe("list-1");
@@ -201,6 +202,7 @@ describe("saveGroceryList", () => {
       quantity: "1",
       unit: "tsp",
       isChecked: false,
+      category: "pantry",
     });
   });
 
@@ -216,6 +218,7 @@ describe("saveGroceryList", () => {
     const result = await saveGroceryList("Empty", null, []);
     expect(result.items).toEqual([]);
   });
+
 });
 
 // ── listSavedGroceryLists ─────────────────────────────────────────────────

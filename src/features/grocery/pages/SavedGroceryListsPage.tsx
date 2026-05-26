@@ -405,42 +405,61 @@ export default function SavedGroceryListsPage() {
                               This list has no items.
                             </p>
                           ) : (
-                            <ul
-                              className="grocery-item-list"
-                              aria-label="Grocery items"
-                            >
-                              {expandedList.items.map((item) => (
-                                <li
-                                  key={item.id}
-                                  className={`grocery-item${
-                                    item.isChecked
-                                      ? " grocery-item--checked"
-                                      : ""
-                                  }`}
-                                >
-                                  <label className="grocery-item__label">
-                                    <input
-                                      type="checkbox"
-                                      className="grocery-item__checkbox"
-                                      checked={item.isChecked}
-                                      disabled={togglingItemId === item.id}
-                                      onChange={(e) =>
-                                        void handleToggleItem(
-                                          item.id,
-                                          e.target.checked
-                                        )
-                                      }
-                                    />
-                                    <span className="grocery-item__name">
-                                      {item.ingredientName}
-                                    </span>
-                                    {(item.quantity || item.unit) && (
-                                      <span className="grocery-item__amount">
-                                        {[item.quantity, item.unit]
-                                          .filter(Boolean)
-                                          .join(" ")}
-                                      </span>
-                                    )}
+                            <div className="grocery-item-groups">
+                              {groupItemsByCategory(expandedList.items).map(
+                                (group) => (
+                                  <div
+                                    key={group.label}
+                                    className="grocery-category"
+                                  >
+                                    <h3 className="grocery-category__header">
+                                      {group.label}
+                                    </h3>
+                                    <ul
+                                      className="grocery-item-list"
+                                      aria-label={`${group.label} items`}
+                                    >
+                                      {group.items.map((item) => (
+                                        <li
+                                          key={item.id}
+                                          className={`grocery-item${
+                                            item.isChecked
+                                              ? " grocery-item--checked"
+                                              : ""
+                                          }`}
+                                        >
+                                          <label className="grocery-item__label">
+                                            <input
+                                              type="checkbox"
+                                              className="grocery-item__checkbox"
+                                              checked={item.isChecked}
+                                              disabled={togglingItemId === item.id}
+                                              onChange={(e) =>
+                                                void handleToggleItem(
+                                                  item.id,
+                                                  e.target.checked
+                                                )
+                                              }
+                                            />
+                                            <span className="grocery-item__name">
+                                              {item.ingredientName}
+                                            </span>
+                                            {(item.quantity || item.unit) && (
+                                              <span className="grocery-item__amount">
+                                                {[item.quantity, item.unit]
+                                                  .filter(Boolean)
+                                                  .join(" ")}
+                                              </span>
+                                            )}
+                                          </label>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
                                   </label>
                                 </li>
                               ))}
