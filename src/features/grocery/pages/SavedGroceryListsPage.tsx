@@ -461,11 +461,6 @@ export default function SavedGroceryListsPage() {
                               )}
                             </div>
                           )}
-                                  </label>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                         </>
                       )}
                     </div>
