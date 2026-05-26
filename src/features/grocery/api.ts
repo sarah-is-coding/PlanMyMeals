@@ -159,7 +159,7 @@ export async function buildGroceryItemsForPlan(
   }
 
   // 4. Scale each plan item's ingredients and collect
-  const scaled: { ingredientName: string; quantity: string; unit: string }[] = [];
+  const scaled: GroceryItemDraft[] = [];
   for (const item of planItems) {
     if (!item.recipe_id) continue;
     const ings = ingByRecipe.get(item.recipe_id) ?? [];
