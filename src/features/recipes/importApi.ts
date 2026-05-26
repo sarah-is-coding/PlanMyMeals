@@ -1,9 +1,33 @@
+import { FunctionsHttpError } from "@supabase/functions-js";
 import { supabase } from "../../lib/supabaseClient";
 import type { RecipeImportResult } from "./importTypes";
 
 type ImportRecipesResponse = RecipeImportResult & {
   error?: string;
 };
+
+/**
+ * When an edge function returns a non-2xx status, Supabase wraps it in a
+ * FunctionsHttpError whose `.message` is always the generic
+ * "Edge Function returned a non-2xx status code" string.  The real message
+ * from the function body is in `.context` (the raw Response).  This helper
+ * pulls that out so the UI can show something meaningful.
+ */
+async function resolveEdgeFunctionError(error: unknown): Promise<Error> {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = (await error.context.json()) as { error?: string };
+      if (body?.error) {
+        return new Error(body.error);
+      }
+    } catch {
+      // Body wasn't JSON — fall through to the generic message.
+    }
+  }
+  return error instanceof Error
+    ? error
+    : new Error("An unexpected error occurred.");
+}
 
 export async function extractRecipesFromText(text: string): Promise<RecipeImportResult> {
   const trimmedText = text.trim();
@@ -19,7 +43,7 @@ export async function extractRecipesFromText(text: string): Promise<RecipeImport
   );
 
   if (error) {
-    throw new Error(error.message);
+    throw await resolveEdgeFunctionError(error);
   }
 
   if (!data) {
@@ -52,7 +76,7 @@ export async function generateRecipesFromPrompt(
   );
 
   if (error) {
-    throw new Error(error.message);
+    throw await resolveEdgeFunctionError(error);
   }
 
   if (!data) {
