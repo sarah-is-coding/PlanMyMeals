@@ -46,6 +46,7 @@ export const mapImportedRecipeToInput = (
     quantity: normalizeText(ingredient.quantity),
     unit: normalizeText(ingredient.unit),
     notes: normalizeText(ingredient.notes),
+    category: ingredient.category,
   })),
 });
 
@@ -69,6 +70,7 @@ export const mapImportedRecipeToFormValues = (
           quantity: normalizeText(ingredient.quantity),
           unit: normalizeText(ingredient.unit),
           notes: normalizeText(ingredient.notes),
+          category: ingredient.category,
         }))
       : [createEmptyIngredient()],
 });

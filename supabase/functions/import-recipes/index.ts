@@ -56,7 +56,6 @@ const recipeSchema = {
                     "beverages",
                     "other",
                   ],
-                  nullable: true,
                 },
               },
               required: ["ingredientName", "quantity", "unit", "notes", "category"],
@@ -201,7 +200,7 @@ Rules:
 - If a source step references another recipe, package, video, or external page, rewrite it into direct cooking instructions using the available text. If details are unavailable, state the missing detail plainly in warnings instead of referencing the source.
 - Include ingredient details directly in the steps when needed. A user must be able to cook from the saved recipe without visiting sourceUrl.
 - Split ingredients into ingredientName, quantity, unit, and notes.
-- Use category only from the allowed ingredient categories.
+- Assign a category to every ingredient — never leave it blank. Choose the most fitting one: "produce" (vegetables, fruit, fresh herbs, garlic, onion); "meat & seafood" (meat, poultry, fish, shellfish); "dairy & eggs" (milk, cream, cheese, butter, yogurt, eggs); "bakery & bread" (bread, tortillas, rolls, wraps); "pantry" (canned goods, dried pasta, rice, grains, flour, sugar, spices, oils, vinegar, sauces, condiments, nuts, seeds); "frozen" (frozen vegetables, frozen protein, ice cream); "beverages" (juice, broth, stock, wine, beer, water, non-dairy milk); "other" only if nothing else fits.
 - Add warnings for inaccessible URLs, missing details, social/video links that could not be read, or low-confidence extraction.
 `;
 

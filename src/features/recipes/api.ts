@@ -112,7 +112,7 @@ const getIngredientPayload = async (recipeId: string, input: RecipeUpsertInput) 
       const ingredientId = ingredient.ingredientId
         ? ingredient.ingredientId
         : ingredientName
-          ? (await createIngredient(ingredientName)).id
+          ? (await createIngredient(ingredientName, ingredient.category ?? "other")).id
           : "";
       const quantityText = cleanText(ingredient.quantity);
       const quantityNumeric = quantityText

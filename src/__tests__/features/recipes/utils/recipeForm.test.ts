@@ -10,13 +10,14 @@ import type { RecipeDetail } from "../../../../features/recipes/types";
 // createEmptyIngredient
 // ─────────────────────────────────────────────────────────────
 describe("createEmptyIngredient", () => {
-  it("returns empty strings for all text fields", () => {
+  it("returns empty strings for all text fields and null category", () => {
     const ingredient = createEmptyIngredient();
     expect(ingredient.ingredientId).toBe("");
     expect(ingredient.ingredientName).toBe("");
     expect(ingredient.quantity).toBe("");
     expect(ingredient.unit).toBe("");
     expect(ingredient.notes).toBe("");
+    expect(ingredient.category).toBeNull();
   });
 
   it("generates a non-empty id", () => {
@@ -98,7 +99,7 @@ describe("mapRecipeDetailToFormValues", () => {
     expect(form.tags).toBe("quick, chicken");
   });
 
-  it("maps ingredients including ingredientId", () => {
+  it("maps ingredients including ingredientId, category is always null", () => {
     const form = mapRecipeDetailToFormValues(baseRecipe);
     expect(form.ingredients).toHaveLength(1);
     expect(form.ingredients[0].ingredientId).toBe("canonical-1");
@@ -106,6 +107,8 @@ describe("mapRecipeDetailToFormValues", () => {
     expect(form.ingredients[0].quantity).toBe("2");
     expect(form.ingredients[0].unit).toBe("lbs");
     expect(form.ingredients[0].notes).toBe("boneless");
+    // category lives on the ingredients table, not on recipe_ingredients
+    expect(form.ingredients[0].category).toBeNull();
   });
 
   it("falls back to one empty ingredient when recipe has none", () => {
@@ -155,6 +158,7 @@ describe("mapRecipeFormValuesToInput", () => {
         quantity: "200",
         unit: "g",
         notes: "",
+        category: null,
       },
     ],
   };
@@ -203,11 +207,12 @@ describe("mapRecipeFormValuesToInput", () => {
     expect(input.tags).toEqual([]);
   });
 
-  it("maps ingredients with ingredientId", () => {
+  it("maps ingredients with ingredientId and category", () => {
     const input = mapRecipeFormValuesToInput(baseFormValues);
     expect(input.ingredients).toHaveLength(1);
     expect(input.ingredients[0].ingredientId).toBe("canonical-42");
     expect(input.ingredients[0].ingredientName).toBe("spaghetti");
     expect(input.ingredients[0].quantity).toBe("200");
+    expect(input.ingredients[0].category).toBeNull();
   });
 });

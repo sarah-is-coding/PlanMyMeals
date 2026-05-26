@@ -1,3 +1,5 @@
+import type { IngredientCategory } from "../ingredients/types";
+
 export type RecipeSortOption = "newest" | "oldest" | "title_asc" | "title_desc";
 
 export type RecipeListFilters = {
@@ -46,6 +48,7 @@ export type RecipeIngredientInput = {
   quantity: string | null;
   unit: string | null;
   notes: string | null;
+  category: IngredientCategory | null;
 };
 
 export type RecipeUpsertInput = {

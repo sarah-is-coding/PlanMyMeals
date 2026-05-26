@@ -1,3 +1,4 @@
+import type { IngredientCategory } from "../../ingredients/types";
 import type { RecipeDetail, RecipeUpsertInput } from "../types";
 
 export type RecipeFormIngredient = {
@@ -7,6 +8,7 @@ export type RecipeFormIngredient = {
   quantity: string;
   unit: string;
   notes: string;
+  category: IngredientCategory | null;
 };
 
 export type RecipeFormValues = {
@@ -64,6 +66,7 @@ export const createEmptyIngredient = (): RecipeFormIngredient => ({
   quantity: "",
   unit: "",
   notes: "",
+  category: null,
 });
 
 export const createEmptyRecipeFormValues = (): RecipeFormValues => ({
@@ -96,6 +99,7 @@ export const mapRecipeDetailToFormValues = (recipe: RecipeDetail): RecipeFormVal
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           notes: ingredient.notes,
+          category: null, // category lives on the ingredients table, not recipe_ingredients
         }))
       : [createEmptyIngredient()],
 });
@@ -117,5 +121,6 @@ export const mapRecipeFormValuesToInput = (
     quantity: ingredient.quantity,
     unit: ingredient.unit,
     notes: ingredient.notes,
+    category: ingredient.category,
   })),
 });

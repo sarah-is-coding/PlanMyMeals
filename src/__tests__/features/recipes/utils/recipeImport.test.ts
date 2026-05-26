@@ -45,6 +45,7 @@ describe("recipe import mapping", () => {
           quantity: "1",
           unit: "lb",
           notes: "salted and peppered",
+          category: "meat & seafood",
         },
       ],
     });
