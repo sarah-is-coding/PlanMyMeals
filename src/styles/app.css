@@ -1050,6 +1050,7 @@
 }
 
 .recipe-page-header__actions {
+  position: relative;
   display: inline-flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -1852,6 +1853,14 @@
 
 .meal-recipe-panel__target-anchor {
   position: relative;
+  min-height: 0;
+}
+
+/* Unlike .meal-recipe-panel__target-anchor, this deliberately has no
+   `position`, so the popup's absolute positioning resolves against the
+   nearest positioned ancestor further up the tree (e.g. the button rail
+   it sits in) instead of hugging this trigger's own narrow width. */
+.add-to-plan-anchor {
   min-height: 0;
 }
 

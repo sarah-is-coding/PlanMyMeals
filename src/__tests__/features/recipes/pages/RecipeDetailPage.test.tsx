@@ -18,10 +18,16 @@ vi.mock("../../../../features/ingredients/api", () => ({
   searchIngredients: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("../../../../features/meal-plans/api", () => ({
+  addMealPlanItem: vi.fn(),
+}));
+
 import { getRecipeById, updateRecipe } from "../../../../features/recipes/api";
+import { addMealPlanItem } from "../../../../features/meal-plans/api";
 
 const mockGetRecipeById = vi.mocked(getRecipeById);
 const mockUpdateRecipe = vi.mocked(updateRecipe);
+const mockAddMealPlanItem = vi.mocked(addMealPlanItem);
 
 const recipe = {
   id: "recipe-1",
@@ -60,6 +66,37 @@ describe("RecipeDetailPage", () => {
     vi.clearAllMocks();
     mockGetRecipeById.mockResolvedValue(recipe);
     mockUpdateRecipe.mockResolvedValue(undefined);
+  });
+
+  it("adds the recipe to the meal plan from the detail page", async () => {
+    mockAddMealPlanItem.mockResolvedValue({
+      id: "item-1",
+      recipeId: "recipe-1",
+      recipeTitle: "Chicken Caesar Taco Salad",
+      plannedFor: "2026-01-01",
+      mealType: "dinner",
+      servingsOverride: null,
+      recipeServings: 4,
+      effectiveServings: 4,
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getAllByText("Chicken Caesar Taco Salad").length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: "Add recipe" }));
+
+    await waitFor(() => {
+      expect(mockAddMealPlanItem).toHaveBeenCalledWith(
+        expect.objectContaining({ recipeId: "recipe-1", mealType: "dinner", servingsOverride: null })
+      );
+    });
+    expect(await screen.findByText("Added to your meal plan.")).toBeInTheDocument();
   });
 
   it("shows a sticky save button while editing and submits the edit form", async () => {

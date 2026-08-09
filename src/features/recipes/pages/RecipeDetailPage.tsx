@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
+import AddToPlanButton from "../../meal-plans/components/AddToPlanButton";
 import RecipeFormFields from "../components/RecipeFormFields";
 import RecipeReadArticle from "../components/RecipeReadArticle";
 import { getRecipeById, updateRecipe } from "../api";
@@ -315,6 +316,13 @@ export default function RecipeDetailPage() {
             <Link className="btn btn--ghost" to={backTo}>
               {backLabel}
             </Link>
+            {!editing && recipeId ? (
+              <AddToPlanButton
+                recipeId={recipeId}
+                recipeTitle={formValues.title}
+                recipeServings={recipeBaseServings}
+              />
+            ) : null}
             {!editing ? (
               <button
                 type="button"
