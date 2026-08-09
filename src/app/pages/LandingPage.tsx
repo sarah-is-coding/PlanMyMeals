@@ -1,11 +1,7 @@
 import { Link } from "react-router-dom";
 import AdSlot from "../../components/ads/AdSlot";
 
-type LandingPageProps = {
-  isAuthenticated: boolean;
-};
-
-export default function LandingPage({ isAuthenticated }: LandingPageProps) {
+export default function LandingPage() {
   return (
     <main className="landing">
       <div className="landing__glow landing__glow--one" />
@@ -18,8 +14,8 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
           PlanMyMeals
         </div>
         <div className="topbar__actions">
-          <Link className="btn btn--ghost" to={isAuthenticated ? "/app" : "/auth"}>
-            {isAuthenticated ? "Open App" : "Sign In"}
+          <Link className="btn btn--ghost" to="/auth">
+            Sign In
           </Link>
         </div>
       </header>
@@ -34,8 +30,8 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
             well.
           </p>
           <div className="hero__actions">
-            <Link className="btn btn--primary" to={isAuthenticated ? "/app" : "/auth"}>
-              {isAuthenticated ? "Go to Dashboard" : "Start Free"}
+            <Link className="btn btn--primary" to="/auth">
+              Start Free
             </Link>
             <a className="btn btn--ghost" href="#features">
               Explore Features
@@ -80,7 +76,7 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
           </ul>
           <div className="hero-panel__footer">
             <p>Grocery list generated from 12 ingredients.</p>
-            <Link to={isAuthenticated ? "/app" : "/auth"}>Open Planner</Link>
+            <Link to="/auth">Open Planner</Link>
           </div>
         </div>
       </section>
@@ -112,8 +108,8 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
       <section className="cta reveal">
         <h2>Ready to make meal planning finally stick?</h2>
         <p>Start with your first recipe and build a plan for this week.</p>
-        <Link className="btn btn--primary" to={isAuthenticated ? "/app" : "/auth"}>
-          {isAuthenticated ? "Continue Planning" : "Create Your Account"}
+        <Link className="btn btn--primary" to="/auth">
+          Create Your Account
         </Link>
       </section>
 

@@ -31,7 +31,10 @@ export default function AppRouter({ session, authReady }: AppRouterProps) {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage isAuthenticated={!!session} />} />
+        <Route
+          path="/"
+          element={session ? <Navigate to="/app" replace /> : <LandingPage />}
+        />
         <Route
           path="/auth"
           element={session ? <Navigate to="/app" replace /> : <AuthPage />}
