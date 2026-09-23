@@ -19,6 +19,7 @@ vi.mock("../../../../features/recipes/api", () => ({
   getRecipeById: vi.fn(),
   updateRecipe: vi.fn(),
   deleteRecipe: vi.fn(),
+  rateRecipe: vi.fn(),
 }));
 
 vi.mock("../../../../features/ingredients/api", () => ({
@@ -35,12 +36,18 @@ vi.mock("../../../../features/meal-plans/api", () => ({
   addMealPlanItem: vi.fn(),
 }));
 
-import { deleteRecipe, getRecipeById, updateRecipe } from "../../../../features/recipes/api";
+import {
+  deleteRecipe,
+  getRecipeById,
+  rateRecipe,
+  updateRecipe,
+} from "../../../../features/recipes/api";
 import { addMealPlanItem } from "../../../../features/meal-plans/api";
 
 const mockGetRecipeById = vi.mocked(getRecipeById);
 const mockUpdateRecipe = vi.mocked(updateRecipe);
 const mockDeleteRecipe = vi.mocked(deleteRecipe);
+const mockRateRecipe = vi.mocked(rateRecipe);
 const mockAddMealPlanItem = vi.mocked(addMealPlanItem);
 
 const recipe = {
@@ -53,6 +60,7 @@ const recipe = {
   servings: 4,
   tags: [],
   instructions: "1. Cook chicken.",
+  rating: null,
   createdAt: "2026-05-25T00:00:00Z",
   ingredients: [
     {
@@ -81,6 +89,7 @@ describe("RecipeDetailPage", () => {
     mockGetRecipeById.mockResolvedValue(recipe);
     mockUpdateRecipe.mockResolvedValue(undefined);
     mockDeleteRecipe.mockResolvedValue(undefined);
+    mockRateRecipe.mockResolvedValue(undefined);
   });
 
   it("adds the recipe to the meal plan from the detail page", async () => {
@@ -177,5 +186,36 @@ describe("RecipeDetailPage", () => {
 
     expect(await screen.findByText("Failed to delete recipe.")).toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("rates the recipe when a star is clicked", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("radio", { name: "Rate 4 stars" }));
+
+    await waitFor(() => {
+      expect(mockRateRecipe).toHaveBeenCalledWith("recipe-1", 4);
+    });
+    expect(screen.getByRole("radio", { name: "Rate 4 stars" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+  });
+
+  it("shows an error and keeps the previous rating when rating fails", async () => {
+    mockRateRecipe.mockRejectedValue(new Error("Failed to update rating."));
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("radio", { name: "Rate 4 stars" }));
+
+    expect(await screen.findByText("Failed to update rating.")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Rate 4 stars" })).toHaveAttribute(
+      "aria-checked",
+      "false"
+    );
   });
 });

@@ -4,7 +4,8 @@ import LoadingModal from "../../../components/feedback/LoadingModal";
 import AddToPlanButton from "../../meal-plans/components/AddToPlanButton";
 import RecipeFormFields from "../components/RecipeFormFields";
 import RecipeReadArticle from "../components/RecipeReadArticle";
-import { deleteRecipe, getRecipeById, updateRecipe } from "../api";
+import StarRating from "../components/StarRating";
+import { deleteRecipe, getRecipeById, rateRecipe, updateRecipe } from "../api";
 import {
   createEmptyIngredient,
   mapRecipeDetailToFormValues,
@@ -58,6 +59,8 @@ export default function RecipeDetailPage() {
   const [editScaleBaseServings, setEditScaleBaseServings] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [savingRating, setSavingRating] = useState(false);
 
   useEffect(() => {
     if (!recipeId) {
@@ -85,6 +88,7 @@ export default function RecipeDetailPage() {
           setSnapshot(null);
           setViewServings(null);
           setEditScaleBaseServings(null);
+          setRating(null);
           setLoading(false);
           return;
         }
@@ -97,6 +101,7 @@ export default function RecipeDetailPage() {
         setSnapshot(nextValues);
         setViewServings(initialServingsFromMealPlan ?? recipeBaseServings);
         setEditScaleBaseServings(recipeBaseServings);
+        setRating(recipe.rating);
       } catch (fetchError) {
         if (mounted) {
           setError(
@@ -274,6 +279,26 @@ export default function RecipeDetailPage() {
     }
   };
 
+  const handleRateChange = async (nextRating: number | null) => {
+    if (!recipeId) {
+      return;
+    }
+
+    setSavingRating(true);
+    setError(null);
+
+    try {
+      await rateRecipe(recipeId, nextRating);
+      setRating(nextRating);
+    } catch (rateError) {
+      setError(
+        rateError instanceof Error ? rateError.message : "Failed to update rating."
+      );
+    } finally {
+      setSavingRating(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!recipeId) {
       return;
@@ -333,7 +358,17 @@ export default function RecipeDetailPage() {
     >
       <article className="workspace-card">
         <div className="recipe-page-header">
-          <h1>{formValues.title || "Recipe Details"}</h1>
+          <div className="recipe-page-header__title">
+            <h1>{formValues.title || "Recipe Details"}</h1>
+            {!editing ? (
+              <StarRating
+                value={rating}
+                onChange={handleRateChange}
+                disabled={savingRating}
+                label="Rate this recipe"
+              />
+            ) : null}
+          </div>
           <div className="recipe-page-header__actions">
             <Link className="btn btn--ghost" to={backTo}>
               {backLabel}

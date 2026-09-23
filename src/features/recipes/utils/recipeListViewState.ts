@@ -22,16 +22,26 @@ type PartialRecipeListFilters = Partial<RecipeListFilters> & {
 const isValidSortOption = (value: string): value is RecipeSortOption =>
   VALID_SORT_OPTIONS.includes(value as RecipeSortOption);
 
+const sanitizeMinRating = (value: unknown): number => {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 5) {
+    return 0;
+  }
+  return parsed;
+};
+
 export const createDefaultRecipeListFilters = (): RecipeListFilters => ({
   sort: "newest",
   tag: "",
   onlyWithSource: false,
+  minRating: 0,
 });
 
 const sanitizeFilters = (filters: PartialRecipeListFilters | undefined): RecipeListFilters => ({
   sort: isValidSortOption(filters?.sort ?? "") ? filters!.sort! : "newest",
   tag: (filters?.tag ?? "").trim(),
   onlyWithSource: Boolean(filters?.onlyWithSource),
+  minRating: sanitizeMinRating(filters?.minRating),
 });
 
 export const loadRecipeListViewState = (): RecipeListViewState => {

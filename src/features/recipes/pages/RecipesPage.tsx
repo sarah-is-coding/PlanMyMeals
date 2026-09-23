@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import StarRating from "../components/StarRating";
 import { listRecipes } from "../api";
 import type { RecipeListFilters, RecipeSummary } from "../types";
 import {
@@ -240,6 +241,27 @@ export default function RecipesPage() {
               <span>Only recipes with source URL</span>
             </label>
 
+            <label className="recipe-field">
+              <span>Minimum rating</span>
+              <select
+                value={filters.minRating}
+                onChange={(event) => {
+                  setFilters((previousFilters) => ({
+                    ...previousFilters,
+                    minRating: Number(event.target.value),
+                  }));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={0}>Any</option>
+                <option value={1}>1+ stars</option>
+                <option value={2}>2+ stars</option>
+                <option value={3}>3+ stars</option>
+                <option value={4}>4+ stars</option>
+                <option value={5}>5 stars</option>
+              </select>
+            </label>
+
             <button
               type="button"
               className="btn btn--ghost"
@@ -280,6 +302,7 @@ export default function RecipesPage() {
                       <h2>{recipe.title}</h2>
                       <span>{formatTotalMinutes(recipe)}</span>
                     </div>
+                    <StarRating value={recipe.rating} size="sm" />
                     {recipe.description ? <p>{recipe.description}</p> : null}
                     <div className="recipe-card__meta">
                       {recipe.tags.slice(0, 3).map((tag) => (

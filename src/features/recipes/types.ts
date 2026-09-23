@@ -6,6 +6,7 @@ export type RecipeListFilters = {
   sort: RecipeSortOption;
   tag: string;
   onlyWithSource: boolean;
+  minRating: number;
 };
 
 export type RecipeSummary = {
@@ -16,6 +17,7 @@ export type RecipeSummary = {
   cookMinutes: number | null;
   tags: string[];
   hasSource: boolean;
+  rating: number | null;
   createdAt: string;
 };
 
@@ -38,6 +40,7 @@ export type RecipeDetail = {
   servings: number | null;
   tags: string[];
   instructions: string | null;
+  rating: number | null;
   createdAt: string;
   ingredients: RecipeIngredient[];
 };

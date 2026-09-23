@@ -17,6 +17,7 @@ type RecipeSummaryRow = {
   cook_minutes: number | null;
   tags: string[] | null;
   source_url: string | null;
+  rating: number | null;
   created_at: string;
 };
 
@@ -30,6 +31,7 @@ type RecipeDetailRow = {
   servings: number | null;
   tags: string[] | null;
   instructions: string | null;
+  rating: number | null;
   created_at: string;
 };
 
@@ -54,6 +56,7 @@ const mapRecipeSummaryRow = (row: RecipeSummaryRow): RecipeSummary => ({
   cookMinutes: row.cook_minutes,
   tags: row.tags ?? [],
   hasSource: Boolean(row.source_url),
+  rating: row.rating,
   createdAt: row.created_at,
 });
 
@@ -76,6 +79,7 @@ const mapRecipeDetail = (row: RecipeDetailRow, ingredients: RecipeIngredient[]):
   servings: row.servings,
   tags: row.tags ?? [],
   instructions: row.instructions,
+  rating: row.rating,
   createdAt: row.created_at,
   ingredients,
 });
@@ -176,9 +180,10 @@ export async function listRecipes(
 
   let query = supabase
     .from("recipes")
-    .select("id,title,description,prep_minutes,cook_minutes,tags,source_url,created_at", {
-      count: "exact",
-    })
+    .select(
+      "id,title,description,prep_minutes,cook_minutes,tags,source_url,rating,created_at",
+      { count: "exact" }
+    )
     .range(from, to);
 
   const trimmedSearch = searchTerm.trim();
@@ -193,6 +198,10 @@ export async function listRecipes(
 
   if (filters.onlyWithSource) {
     query = query.not("source_url", "is", null);
+  }
+
+  if (filters.minRating > 0) {
+    query = query.gte("rating", filters.minRating);
   }
 
   switch (filters.sort) {
@@ -227,7 +236,7 @@ export async function getRecipeById(recipeId: string): Promise<RecipeDetail | nu
   const { data: recipeRow, error: recipeError } = await supabase
     .from("recipes")
     .select(
-      "id,title,description,source_url,prep_minutes,cook_minutes,servings,tags,instructions,created_at"
+      "id,title,description,source_url,prep_minutes,cook_minutes,servings,tags,instructions,rating,created_at"
     )
     .eq("id", recipeId)
     .maybeSingle<RecipeDetailRow>();
@@ -282,6 +291,14 @@ export async function createRecipe(input: RecipeUpsertInput): Promise<string> {
   }
 
   return recipeRow.id;
+}
+
+export async function rateRecipe(recipeId: string, rating: number | null): Promise<void> {
+  const { error } = await supabase.from("recipes").update({ rating }).eq("id", recipeId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function deleteRecipe(recipeId: string): Promise<void> {
