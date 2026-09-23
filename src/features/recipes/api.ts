@@ -284,6 +284,14 @@ export async function createRecipe(input: RecipeUpsertInput): Promise<string> {
   return recipeRow.id;
 }
 
+export async function deleteRecipe(recipeId: string): Promise<void> {
+  const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function updateRecipe(recipeId: string, input: RecipeUpsertInput): Promise<void> {
   if (!input.title.trim()) {
     throw new Error("Title is required.");

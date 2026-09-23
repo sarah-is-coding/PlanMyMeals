@@ -3,9 +3,22 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import RecipeDetailPage from "../../../../features/recipes/pages/RecipeDetailPage";
 
+const navigate = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>(
+    "react-router-dom"
+  );
+  return {
+    ...actual,
+    useNavigate: () => navigate,
+  };
+});
+
 vi.mock("../../../../features/recipes/api", () => ({
   getRecipeById: vi.fn(),
   updateRecipe: vi.fn(),
+  deleteRecipe: vi.fn(),
 }));
 
 vi.mock("../../../../features/ingredients/api", () => ({
@@ -22,11 +35,12 @@ vi.mock("../../../../features/meal-plans/api", () => ({
   addMealPlanItem: vi.fn(),
 }));
 
-import { getRecipeById, updateRecipe } from "../../../../features/recipes/api";
+import { deleteRecipe, getRecipeById, updateRecipe } from "../../../../features/recipes/api";
 import { addMealPlanItem } from "../../../../features/meal-plans/api";
 
 const mockGetRecipeById = vi.mocked(getRecipeById);
 const mockUpdateRecipe = vi.mocked(updateRecipe);
+const mockDeleteRecipe = vi.mocked(deleteRecipe);
 const mockAddMealPlanItem = vi.mocked(addMealPlanItem);
 
 const recipe = {
@@ -66,6 +80,7 @@ describe("RecipeDetailPage", () => {
     vi.clearAllMocks();
     mockGetRecipeById.mockResolvedValue(recipe);
     mockUpdateRecipe.mockResolvedValue(undefined);
+    mockDeleteRecipe.mockResolvedValue(undefined);
   });
 
   it("adds the recipe to the meal plan from the detail page", async () => {
@@ -119,5 +134,48 @@ describe("RecipeDetailPage", () => {
         })
       );
     });
+  });
+
+  it("deletes the recipe after confirmation and navigates back to the list", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(screen.getByText("Delete this recipe?")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+    await waitFor(() => {
+      expect(mockDeleteRecipe).toHaveBeenCalledWith("recipe-1");
+    });
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith("/app/recipes");
+    });
+  });
+
+  it("cancels the delete confirmation without deleting", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByText("Delete this recipe?")).not.toBeInTheDocument();
+    expect(mockDeleteRecipe).not.toHaveBeenCalled();
+  });
+
+  it("shows an error message when deleting fails", async () => {
+    mockDeleteRecipe.mockRejectedValue(new Error("Failed to delete recipe."));
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Confirm delete" }));
+
+    expect(await screen.findByText("Failed to delete recipe.")).toBeInTheDocument();
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

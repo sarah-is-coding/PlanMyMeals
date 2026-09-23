@@ -1054,6 +1054,12 @@
   display: inline-flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.recipe-page-header__confirm-label {
+  font-size: 0.84rem;
+  color: var(--color-ink-soft);
 }
 
 .recipe-form {

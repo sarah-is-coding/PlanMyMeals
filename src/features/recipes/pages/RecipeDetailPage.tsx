@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import AddToPlanButton from "../../meal-plans/components/AddToPlanButton";
 import RecipeFormFields from "../components/RecipeFormFields";
 import RecipeReadArticle from "../components/RecipeReadArticle";
-import { getRecipeById, updateRecipe } from "../api";
+import { deleteRecipe, getRecipeById, updateRecipe } from "../api";
 import {
   createEmptyIngredient,
   mapRecipeDetailToFormValues,
@@ -41,6 +41,7 @@ const parseServingsValue = (value: string | number | null | undefined): number |
 
 export default function RecipeDetailPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { recipeId } = useParams();
   const locationState = (location.state ?? null) as RecipeDetailLocationState | null;
   const isFromMealPlanner = locationState?.from === "meal-planner";
@@ -55,6 +56,8 @@ export default function RecipeDetailPage() {
   const [snapshot, setSnapshot] = useState<RecipeFormValues | null>(null);
   const [viewServings, setViewServings] = useState<number | null>(null);
   const [editScaleBaseServings, setEditScaleBaseServings] = useState<number | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!recipeId) {
@@ -271,6 +274,25 @@ export default function RecipeDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!recipeId) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await deleteRecipe(recipeId);
+      navigate("/app/recipes");
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Failed to delete recipe."
+      );
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <section className="workspace-route recipe-route">
@@ -323,7 +345,7 @@ export default function RecipeDetailPage() {
                 recipeServings={recipeBaseServings}
               />
             ) : null}
-            {!editing ? (
+            {!editing && !confirmingDelete ? (
               <button
                 type="button"
                 className="btn btn--primary"
@@ -336,7 +358,8 @@ export default function RecipeDetailPage() {
               >
                 Edit
               </button>
-            ) : (
+            ) : null}
+            {editing ? (
               <button
                 type="button"
                 className="btn btn--ghost"
@@ -345,7 +368,41 @@ export default function RecipeDetailPage() {
               >
                 Cancel
               </button>
-            )}
+            ) : null}
+            {!editing && confirmingDelete ? (
+              <>
+                <span className="recipe-page-header__confirm-label">Delete this recipe?</span>
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting…" : "Confirm delete"}
+                </button>
+              </>
+            ) : null}
+            {!editing && !confirmingDelete ? (
+              <button
+                type="button"
+                className="btn btn--ghost btn--danger-ghost"
+                onClick={() => {
+                  setConfirmingDelete(true);
+                  setError(null);
+                  setMessage(null);
+                }}
+              >
+                Delete
+              </button>
+            ) : null}
           </div>
         </div>
         {error ? <p className="error">{error}</p> : null}

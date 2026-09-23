@@ -12,7 +12,7 @@ vi.mock("../../../features/ingredients/api", () => ({
 vi.mock("../../../lib/supabaseClient", () => {
   const builder: Record<string, ReturnType<typeof vi.fn>> = {};
 
-  for (const method of ["from", "insert", "select", "eq"]) {
+  for (const method of ["from", "insert", "select", "eq", "delete"]) {
     builder[method] = vi.fn().mockReturnValue(builder);
   }
 
@@ -32,7 +32,7 @@ vi.mock("../../../lib/supabaseClient", () => {
 });
 
 import { supabase } from "../../../lib/supabaseClient";
-import { createRecipe } from "../../../features/recipes/api";
+import { createRecipe, deleteRecipe } from "../../../features/recipes/api";
 
 const db = supabase as unknown as Record<string, ReturnType<typeof vi.fn>>;
 
@@ -51,7 +51,7 @@ const recipeInput = {
 describe("recipe api", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    for (const method of ["from", "insert", "select", "eq"]) {
+    for (const method of ["from", "insert", "select", "eq", "delete"]) {
       db[method].mockReturnValue(db);
     }
     db.single.mockResolvedValue({
@@ -73,5 +73,24 @@ describe("recipe api", () => {
     await expect(createRecipe(recipeInput)).rejects.toThrow(
       "A recipe with that title already exists. Rename it and try again."
     );
+  });
+
+  it("deletes a recipe by id", async () => {
+    db.eq.mockResolvedValueOnce({ data: null, error: null });
+
+    await deleteRecipe("recipe-1");
+
+    expect(db.from).toHaveBeenCalledWith("recipes");
+    expect(db.delete).toHaveBeenCalled();
+    expect(db.eq).toHaveBeenCalledWith("id", "recipe-1");
+  });
+
+  it("throws when deleting a recipe fails", async () => {
+    db.eq.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Recipe not found" },
+    });
+
+    await expect(deleteRecipe("recipe-1")).rejects.toThrow("Recipe not found");
   });
 });
