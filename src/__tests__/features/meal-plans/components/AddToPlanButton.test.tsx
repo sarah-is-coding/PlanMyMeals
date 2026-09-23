@@ -3,7 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import AddToPlanButton from "../../../../features/meal-plans/components/AddToPlanButton";
-import { toIsoDate } from "../../../../features/meal-plans/dateUtils";
+import {
+  formatWeekRangeLabel,
+  getWeekDays,
+  getWeekStartIso,
+  shiftWeekStartIso,
+  toIsoDate,
+} from "../../../../features/meal-plans/dateUtils";
 
 const navigate = vi.fn();
 
@@ -127,6 +133,66 @@ describe("AddToPlanButton", () => {
 
     expect(screen.queryByRole("dialog", { name: "Recipe added to plan" })).not.toBeInTheDocument();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("defaults to next week rather than the current week", async () => {
+    const expectedWeekStartIso = shiftWeekStartIso(getWeekStartIso(new Date()), 1);
+    const expectedWeekDays = getWeekDays(expectedWeekStartIso);
+
+    const user = userEvent.setup();
+    renderButton();
+
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+
+    expect(screen.getByText(formatWeekRangeLabel(expectedWeekStartIso))).toBeInTheDocument();
+    const daySelect = screen.getByLabelText("Day") as HTMLSelectElement;
+    expect(daySelect.value).toBe(expectedWeekDays[0].dateIso);
+  });
+
+  it("steps to another week, keeping the same weekday selected", async () => {
+    const initialWeekStartIso = shiftWeekStartIso(getWeekStartIso(new Date()), 1);
+    const initialWeekDays = getWeekDays(initialWeekStartIso);
+
+    const user = userEvent.setup();
+    renderButton();
+
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+
+    const daySelect = screen.getByLabelText("Day") as HTMLSelectElement;
+    await user.selectOptions(daySelect, initialWeekDays[2].dateIso);
+
+    await user.click(screen.getByRole("button", { name: "Next week" }));
+
+    const nextWeekStartIso = shiftWeekStartIso(initialWeekStartIso, 1);
+    const nextWeekDays = getWeekDays(nextWeekStartIso);
+    expect(screen.getByText(formatWeekRangeLabel(nextWeekStartIso))).toBeInTheDocument();
+    expect(daySelect.value).toBe(nextWeekDays[2].dateIso);
+
+    await user.click(screen.getByRole("button", { name: "Previous week" }));
+    expect(screen.getByText(formatWeekRangeLabel(initialWeekStartIso))).toBeInTheDocument();
+    expect(daySelect.value).toBe(initialWeekDays[2].dateIso);
+
+    await user.click(screen.getByRole("button", { name: "Next week" }));
+    await user.click(screen.getByRole("button", { name: "Current week" }));
+
+    const currentWeekStartIso = getWeekStartIso(new Date());
+    const currentWeekDays = getWeekDays(currentWeekStartIso);
+    expect(screen.getByText(formatWeekRangeLabel(currentWeekStartIso))).toBeInTheDocument();
+    expect(daySelect.value).toBe(currentWeekDays[2].dateIso);
+  });
+
+  it("resets to the default week after cancelling", async () => {
+    const expectedWeekStartIso = shiftWeekStartIso(getWeekStartIso(new Date()), 1);
+
+    const user = userEvent.setup();
+    renderButton();
+
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+    await user.click(screen.getByRole("button", { name: "Next week" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+    expect(screen.getByText(formatWeekRangeLabel(expectedWeekStartIso))).toBeInTheDocument();
   });
 
   it("preselects an initial day/meal outside the current week", async () => {

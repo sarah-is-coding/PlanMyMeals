@@ -1979,6 +1979,31 @@
   flex-wrap: wrap;
 }
 
+.meal-target-popup__week-nav {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--alpha-brand-20);
+}
+
+.meal-target-popup__week-label {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.meal-target-popup__week-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.meal-target-popup__week-actions .btn {
+  padding: 0.32rem 0.58rem;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 960px) {
   .recipe-search input {
     font-size: 16px;

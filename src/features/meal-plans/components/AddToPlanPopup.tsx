@@ -9,7 +9,10 @@ type AddToPlanPopupProps = {
   maxHeightPx: number | null;
   recipeTitle: string;
   recipeServings: number | null;
+  weekLabel: string;
   weekDays: MealPlannerDay[];
+  onShiftWeek: (weekOffset: number) => void;
+  onJumpToCurrentWeek: () => void;
   draftDay: string;
   onDraftDayChange: Dispatch<SetStateAction<string>>;
   draftMealType: MealType;
@@ -28,7 +31,10 @@ export default function AddToPlanPopup({
   maxHeightPx,
   recipeTitle,
   recipeServings,
+  weekLabel,
   weekDays,
+  onShiftWeek,
+  onJumpToCurrentWeek,
   draftDay,
   onDraftDayChange,
   draftMealType,
@@ -52,6 +58,29 @@ export default function AddToPlanPopup({
     >
       <p className="meal-target-popup__title">Add to plan</p>
       <p className="meal-target-popup__recipe">{recipeTitle}</p>
+
+      <div className="meal-target-popup__week-nav">
+        <p className="meal-target-popup__week-label">{weekLabel}</p>
+        <div className="meal-target-popup__week-actions">
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => onShiftWeek(-1)}
+          >
+            Previous week
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={onJumpToCurrentWeek}>
+            Current week
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => onShiftWeek(1)}
+          >
+            Next week
+          </button>
+        </div>
+      </div>
 
       <label className="recipe-field">
         <span>Day</span>

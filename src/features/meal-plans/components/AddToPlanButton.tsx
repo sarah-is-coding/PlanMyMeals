@@ -1,8 +1,14 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addMealPlanItem } from "../api";
 import { DEFAULT_MEAL_TYPE, MEAL_TYPE_OPTIONS } from "../constants";
-import { createDateFromIso, getWeekDays, getWeekStartIso } from "../dateUtils";
+import {
+  createDateFromIso,
+  formatWeekRangeLabel,
+  getWeekDays,
+  getWeekStartIso,
+  shiftWeekStartIso,
+} from "../dateUtils";
 import { useAddToPlanPopup } from "../hooks/useAddToPlanPopup";
 import type { MealType } from "../types";
 import AddToPlanPopup from "./AddToPlanPopup";
@@ -15,11 +21,17 @@ type AddToPlanButtonProps = {
   initialMealType?: MealType;
 };
 
+const getDefaultWeekStartIso = (initialDay?: string): string =>
+  initialDay
+    ? getWeekStartIso(createDateFromIso(initialDay))
+    : shiftWeekStartIso(getWeekStartIso(new Date()), 1);
+
 /** Standalone "Add to plan" trigger for pages outside the meal planner
  *  (e.g. the recipe detail page). Reuses the same popup used by the
- *  planner's calendar, scoped to the current week unless an initial
- *  day is given (e.g. arriving from a meal slot's "Search recipes"
- *  link), in which case it's scoped to that day's week instead. */
+ *  planner's calendar, and lets you step to other weeks just like the
+ *  planner does. Scoped to the given day's week when arriving from a
+ *  meal slot's "Search recipes" link; otherwise defaults to *next*
+ *  week, since the current week is often already planned. */
 export default function AddToPlanButton({
   recipeId,
   recipeTitle,
@@ -28,14 +40,16 @@ export default function AddToPlanButton({
   initialMealType,
 }: AddToPlanButtonProps) {
   const navigate = useNavigate();
-  const weekStartIso = useMemo(
-    () => getWeekStartIso(initialDay ? createDateFromIso(initialDay) : new Date()),
-    [initialDay]
-  );
-  const weekDays = useMemo(() => getWeekDays(weekStartIso), [weekStartIso]);
+  const [weekStartIso, setWeekStartIso] = useState(() => getDefaultWeekStartIso(initialDay));
+  const weekDays = getWeekDays(weekStartIso);
+  const weekLabel = formatWeekRangeLabel(weekStartIso);
   const [isAssigning, setIsAssigning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addedTo, setAddedTo] = useState<{ plannedFor: string; mealType: MealType } | null>(null);
+  const [addedTo, setAddedTo] = useState<{
+    plannedFor: string;
+    mealType: MealType;
+    dayLabel: string;
+  } | null>(null);
 
   const popup = useAddToPlanPopup({
     weekDays,
@@ -53,7 +67,9 @@ export default function AddToPlanButton({
           recipeId: assignedRecipeId,
           servingsOverride,
         });
-        setAddedTo({ plannedFor, mealType });
+        const dayLabel =
+          weekDays.find((day) => day.dateIso === plannedFor)?.fullLabel ?? plannedFor;
+        setAddedTo({ plannedFor, mealType, dayLabel });
       } catch (assignError) {
         setError(
           assignError instanceof Error ? assignError.message : "Failed to add recipe to plan."
@@ -64,6 +80,21 @@ export default function AddToPlanButton({
     },
   });
 
+  const shiftWeek = (nextWeekStartIso: string) => {
+    const dayIndex = weekDays.findIndex((day) => day.dateIso === popup.draftDay);
+    const nextWeekDays = getWeekDays(nextWeekStartIso);
+    const nextDay = nextWeekDays[dayIndex >= 0 ? dayIndex : 0];
+    setWeekStartIso(nextWeekStartIso);
+    if (nextDay) {
+      popup.setDraftDay(nextDay.dateIso);
+    }
+  };
+
+  const handleClose = () => {
+    popup.close();
+    setWeekStartIso(getDefaultWeekStartIso(initialDay));
+  };
+
   return (
     <div className="add-to-plan-anchor" ref={popup.anchorRef}>
       {popup.isOpen ? (
@@ -73,14 +104,17 @@ export default function AddToPlanButton({
           maxHeightPx={popup.popupMaxHeightPx}
           recipeTitle={popup.pendingRecipeTitle}
           recipeServings={popup.pendingRecipeServings}
+          weekLabel={weekLabel}
           weekDays={weekDays}
+          onShiftWeek={(weekOffset) => shiftWeek(shiftWeekStartIso(weekStartIso, weekOffset))}
+          onJumpToCurrentWeek={() => shiftWeek(getWeekStartIso(new Date()))}
           draftDay={popup.draftDay}
           onDraftDayChange={popup.setDraftDay}
           draftMealType={popup.draftMealType}
           onDraftMealTypeChange={popup.setDraftMealType}
           draftServings={popup.draftServings}
           onDraftServingsChange={popup.setDraftServings}
-          onCancel={popup.close}
+          onCancel={handleClose}
           onConfirm={() => {
             void popup.confirm();
           }}
@@ -106,10 +140,7 @@ export default function AddToPlanButton({
         >
           <p className="meal-target-popup__title">Added to your meal plan.</p>
           <p className="meal-target-popup__recipe">
-            Want to see it on{" "}
-            {weekDays.find((day) => day.dateIso === addedTo.plannedFor)?.fullLabel ??
-              addedTo.plannedFor}
-            &apos;s{" "}
+            Want to see it on {addedTo.dayLabel}&apos;s{" "}
             {MEAL_TYPE_OPTIONS.find((option) => option.value === addedTo.mealType)?.label ??
               addedTo.mealType}
             ?
