@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import StarRating from "../components/StarRating";
 import { listRecipes } from "../api";
+import { MEAL_TYPE_OPTIONS } from "../../meal-plans/constants";
+import { createDateFromIso } from "../../meal-plans/dateUtils";
+import type { MealType } from "../../meal-plans/types";
 import type { RecipeListFilters, RecipeSummary } from "../types";
 import {
   clearRecipeListViewState,
@@ -12,6 +15,22 @@ import {
 
 const RECIPES_PER_PAGE = 12;
 
+type MealSlot = { date: string; mealType: MealType };
+type RecipesPageLocationState = { mealSlot?: MealSlot };
+
+const mealSlotDateFormatter = new Intl.DateTimeFormat("en-US", {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
+const formatMealSlot = (mealSlot: MealSlot): string => {
+  const mealTypeLabel =
+    MEAL_TYPE_OPTIONS.find((option) => option.value === mealSlot.mealType)?.label ??
+    mealSlot.mealType;
+  return `${mealSlotDateFormatter.format(createDateFromIso(mealSlot.date))} · ${mealTypeLabel}`;
+};
+
 const formatTotalMinutes = (recipe: RecipeSummary): string => {
   const totalMinutes = (recipe.prepMinutes ?? 0) + (recipe.cookMinutes ?? 0);
   if (totalMinutes <= 0) {
@@ -21,6 +40,9 @@ const formatTotalMinutes = (recipe: RecipeSummary): string => {
 };
 
 export default function RecipesPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const mealSlot = (location.state as RecipesPageLocationState | null)?.mealSlot;
   const [initialState] = useState(loadRecipeListViewState);
   const [searchInput, setSearchInput] = useState(initialState.searchInput);
   const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
@@ -104,6 +126,20 @@ export default function RecipesPage() {
     <section className="workspace-route recipe-route">
       <article className="workspace-card recipe-shell">
         <h1>Recipes</h1>
+
+        {mealSlot ? (
+          <p className="recipe-meal-slot-banner">
+            Picking a recipe for <strong>{formatMealSlot(mealSlot)}</strong>
+            {" · "}
+            <button
+              type="button"
+              className="recipe-meal-slot-banner__cancel"
+              onClick={() => navigate(location.pathname, { replace: true, state: null })}
+            >
+              Cancel
+            </button>
+          </p>
+        ) : null}
 
         <div className="recipe-toolbar">
           <label className="recipe-search" htmlFor="recipe-search-input">
@@ -296,6 +332,7 @@ export default function RecipesPage() {
                   <Link
                     className="recipe-card"
                     to={`/app/recipes/${recipe.id}`}
+                    state={mealSlot ? { from: "meal-planner", mealSlot } : undefined}
                     onClick={persistListState}
                   >
                     <div className="recipe-card__head">

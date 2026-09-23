@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import RecipesPage from "../../../../features/recipes/pages/RecipesPage";
 
 vi.mock("../../../../features/recipes/api", () => ({
@@ -43,6 +43,28 @@ const renderPage = () =>
     </MemoryRouter>
   );
 
+function RecipeDetailLocationProbe() {
+  const location = useLocation();
+  return <p>state: {JSON.stringify(location.state)}</p>;
+}
+
+const renderPageWithMealSlot = () =>
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: "/app/recipes",
+          state: { mealSlot: { date: "2026-01-05", mealType: "dinner" } },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path="/app/recipes" element={<RecipesPage />} />
+        <Route path="/app/recipes/:recipeId" element={<RecipeDetailLocationProbe />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
 describe("RecipesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,6 +81,44 @@ describe("RecipesPage", () => {
     expect(
       screen.getByRole("img", { name: "Rated 4 out of 5 stars" })
     ).toBeInTheDocument();
+  });
+
+  it("shows a banner and forwards the meal slot when arriving from a meal slot search link", async () => {
+    const expectedDateLabel = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(2026, 0, 5));
+
+    const user = userEvent.setup();
+    renderPageWithMealSlot();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    expect(screen.getByText(`${expectedDateLabel} · Dinner`)).toBeInTheDocument();
+
+    await user.click(screen.getByText("Chicken Caesar Taco Salad"));
+
+    expect(
+      await screen.findByText(
+        `state: ${JSON.stringify({
+          from: "meal-planner",
+          mealSlot: { date: "2026-01-05", mealType: "dinner" },
+        })}`
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("clears the meal slot banner without leaving the search page when Cancel is clicked", async () => {
+    const user = userEvent.setup();
+    renderPageWithMealSlot();
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByText("Picking a recipe for", { exact: false })).not.toBeInTheDocument();
+    expect(screen.getByText("Chicken Caesar Taco Salad")).toBeInTheDocument();
   });
 
   it("re-queries with the selected minimum rating filter", async () => {

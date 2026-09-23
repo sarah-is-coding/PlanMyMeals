@@ -18,7 +18,7 @@ const monthDayYearFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-function createDateFromIso(isoDate: string): Date {
+export function createDateFromIso(isoDate: string): Date {
   const [yearPart, monthPart, dayPart] = isoDate.split("-").map(Number);
   return new Date(yearPart, monthPart - 1, dayPart);
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import AddToPlanButton from "../../meal-plans/components/AddToPlanButton";
+import type { MealType } from "../../meal-plans/types";
 import RecipeFormFields from "../components/RecipeFormFields";
 import RecipeReadArticle from "../components/RecipeReadArticle";
 import StarRating from "../components/StarRating";
@@ -20,6 +21,7 @@ type RecipeDetailLocationState = {
   from?: "meal-planner";
   mealPlanItemId?: string;
   initialServings?: number | null;
+  mealSlot?: { date: string; mealType: MealType };
 };
 
 const parseServingsValue = (value: string | number | null | undefined): number | null => {
@@ -378,6 +380,8 @@ export default function RecipeDetailPage() {
                 recipeId={recipeId}
                 recipeTitle={formValues.title}
                 recipeServings={recipeBaseServings}
+                initialDay={locationState?.mealSlot?.date}
+                initialMealType={locationState?.mealSlot?.mealType}
               />
             ) : null}
             {!editing && !confirmingDelete ? (

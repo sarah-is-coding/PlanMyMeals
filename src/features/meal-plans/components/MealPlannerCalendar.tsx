@@ -4,7 +4,6 @@ import {
   MEAL_PLAN_ITEM_DRAG_MIME_TYPE,
   MEAL_TYPE_OPTIONS,
   RECIPE_DETAIL_MEAL_PLANNER_STATE,
-  RECIPE_DRAG_MIME_TYPE,
 } from "../constants";
 import type { MealPlanItem, MealPlannerDay, MealType } from "../types";
 
@@ -17,12 +16,6 @@ type MealPlannerCalendarProps = {
   updatingServingsItemId: string | null;
   onShiftWeek: (weekOffset: number) => void;
   onJumpToCurrentWeek: () => void;
-  onAssignRecipe: (
-    recipeId: string,
-    plannedFor: string,
-    mealType: MealType,
-    servingsOverride: number | null
-  ) => Promise<void>;
   onMoveItem: (itemId: string, plannedFor: string, mealType: MealType) => Promise<void>;
   onUpdateItemServings: (itemId: string, servingsOverride: number | null) => Promise<void>;
   onRemoveItem: (itemId: string) => Promise<void>;
@@ -51,7 +44,6 @@ export default function MealPlannerCalendar({
   updatingServingsItemId,
   onShiftWeek,
   onJumpToCurrentWeek,
-  onAssignRecipe,
   onMoveItem,
   onUpdateItemServings,
   onRemoveItem,
@@ -88,18 +80,7 @@ export default function MealPlannerCalendar({
     }
     if (mealPlanItemId) {
       void onMoveItem(mealPlanItemId, dayIso, mealType);
-      return;
     }
-
-    const recipeId =
-      event.dataTransfer.getData(RECIPE_DRAG_MIME_TYPE) ||
-      event.dataTransfer.getData("text/plain");
-
-    if (!recipeId) {
-      return;
-    }
-
-    void onAssignRecipe(recipeId, dayIso, mealType, null);
   };
 
   const openRecipeDetail = (item: MealPlanItem) => {
@@ -159,17 +140,7 @@ export default function MealPlannerCalendar({
                     className={`meal-slot${isDropTarget ? " meal-slot--active" : ""}`}
                     onDragOver={(event) => {
                       event.preventDefault();
-                      const dragTypes = Array.from(event.dataTransfer.types);
-                      const isMealPlanItemDrag = dragTypes.includes(
-                        MEAL_PLAN_ITEM_DRAG_MIME_TYPE
-                      );
-                      const plainTextPayload = event.dataTransfer.getData("text/plain");
-                      const isMealPlanItemTextFallback =
-                        plainTextPayload.startsWith("meal-plan-item:");
-                      event.dataTransfer.dropEffect = isMealPlanItemDrag ? "move" : "copy";
-                      if (isMealPlanItemTextFallback) {
-                        event.dataTransfer.dropEffect = "move";
-                      }
+                      event.dataTransfer.dropEffect = "move";
                     }}
                     onDragEnter={() => setDragOverSlotKey(slotKey)}
                     onDragLeave={() => setDragOverSlotKey((current) => (current === slotKey ? null : current))}
@@ -178,7 +149,7 @@ export default function MealPlannerCalendar({
                   >
                     <div className="meal-slot__title">{option.label}</div>
                     {slotItems.length === 0 ? (
-                      <p className="meal-slot__empty">Drop recipe here</p>
+                      <p className="meal-slot__empty">No recipes yet</p>
                     ) : (
                       <ul className="meal-slot__items">
                         {slotItems.map((item) => (
@@ -303,6 +274,13 @@ export default function MealPlannerCalendar({
                         ))}
                       </ul>
                     )}
+                    <Link
+                      className="meal-slot__search-link"
+                      to="/app/recipes"
+                      state={{ mealSlot: { date: day.dateIso, mealType: option.value } }}
+                    >
+                      Search recipes
+                    </Link>
                   </section>
                 );
               })}

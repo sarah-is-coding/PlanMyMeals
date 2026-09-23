@@ -1,6 +1,5 @@
 import type { MealType } from "./types";
 
-export const RECIPE_DRAG_MIME_TYPE = "application/x-planmymeals-recipe-id";
 export const MEAL_PLAN_ITEM_DRAG_MIME_TYPE =
   "application/x-planmymeals-meal-plan-item-id";
 

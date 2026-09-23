@@ -1,28 +1,12 @@
-import type { MealType } from "../types";
-
 const STORAGE_KEY = "planmymeals:meal-plans:view-state";
-
-const VALID_MEAL_TYPES: MealType[] = ["breakfast", "lunch", "dinner"];
 
 export type MealPlannerViewState = {
   weekStartIso: string;
-  searchInput: string;
-  selectedDay: string;
-  selectedMealType: MealType;
 };
 
-type ParsedMealPlannerViewState = Partial<MealPlannerViewState> & {
-  selectedMealType?: string;
-};
+type ParsedMealPlannerViewState = Partial<MealPlannerViewState>;
 
 const isIsoDate = (value: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(value);
-
-const sanitizeMealType = (value: string | undefined, fallback: MealType): MealType => {
-  if (!value) {
-    return fallback;
-  }
-  return VALID_MEAL_TYPES.includes(value as MealType) ? (value as MealType) : fallback;
-};
 
 export const loadMealPlannerViewState = (
   fallback: MealPlannerViewState
@@ -41,19 +25,8 @@ export const loadMealPlannerViewState = (
     const nextWeekStartIso = isIsoDate(parsedState.weekStartIso ?? "")
       ? parsedState.weekStartIso!
       : fallback.weekStartIso;
-    const nextSelectedDay = isIsoDate(parsedState.selectedDay ?? "")
-      ? parsedState.selectedDay!
-      : fallback.selectedDay;
 
-    return {
-      weekStartIso: nextWeekStartIso,
-      searchInput: (parsedState.searchInput ?? fallback.searchInput).trimStart(),
-      selectedDay: nextSelectedDay,
-      selectedMealType: sanitizeMealType(
-        parsedState.selectedMealType,
-        fallback.selectedMealType
-      ),
-    };
+    return { weekStartIso: nextWeekStartIso };
   } catch {
     return fallback;
   }

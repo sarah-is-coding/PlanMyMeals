@@ -4,7 +4,6 @@ import type {
   AddMealPlanItemInput,
   MealPlanDayPreview,
   MealPlanItem,
-  MealPlannerRecipeSummary,
   MealPlanSpan,
   MoveMealPlanItemInput,
   MealType,
@@ -15,15 +14,6 @@ import type {
 type MealPlanRow = {
   id: string;
   end_date: string | null;
-};
-
-type RecipeSearchRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  prep_minutes: number | null;
-  cook_minutes: number | null;
-  servings: number | null;
 };
 
 type RecipeRelationRow = {
@@ -57,17 +47,6 @@ function getRecipeTitle(relation: RecipeRelation): string {
 
 function getRecipeServings(relation: RecipeRelation): number | null {
   return getRecipeRelationValue(relation)?.servings ?? null;
-}
-
-function mapRecipeSearchRow(row: RecipeSearchRow): MealPlannerRecipeSummary {
-  return {
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    prepMinutes: row.prep_minutes,
-    cookMinutes: row.cook_minutes,
-    servings: row.servings,
-  };
 }
 
 function mapMealPlanItemRow(row: MealPlanItemRow): MealPlanItem {
@@ -147,30 +126,6 @@ async function ensureMealPlanIdForWeek(weekStartIso: string): Promise<string> {
   }
 
   return data.id;
-}
-
-export async function searchPlannerRecipes(
-  searchTerm: string,
-  limit: number = 12
-): Promise<MealPlannerRecipeSummary[]> {
-  const safeLimit = Math.max(1, Math.min(24, Math.floor(limit)));
-  let query = supabase
-    .from("recipes")
-    .select("id,title,description,prep_minutes,cook_minutes,servings")
-    .order("created_at", { ascending: false })
-    .limit(safeLimit);
-
-  const trimmedTerm = searchTerm.trim();
-  if (trimmedTerm) {
-    query = query.ilike("title", `%${trimmedTerm}%`);
-  }
-
-  const { data, error } = await query.returns<RecipeSearchRow[]>();
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).map(mapRecipeSearchRow);
 }
 
 export async function listMealPlanItemsForWeek(weekStartIso: string): Promise<MealPlanItem[]> {

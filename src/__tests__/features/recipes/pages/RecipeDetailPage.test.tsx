@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import RecipeDetailPage from "../../../../features/recipes/pages/RecipeDetailPage";
+import { toIsoDate } from "../../../../features/meal-plans/dateUtils";
 
 const navigate = vi.fn();
 
@@ -83,6 +84,22 @@ const renderPage = () =>
     </MemoryRouter>
   );
 
+const renderPageWithMealSlot = (mealSlot: { date: string; mealType: string }) =>
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: "/app/recipes/recipe-1",
+          state: { from: "meal-planner", mealSlot },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path="/app/recipes/:recipeId" element={<RecipeDetailPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
 describe("RecipeDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -121,6 +138,21 @@ describe("RecipeDetailPage", () => {
       );
     });
     expect(await screen.findByText("Added to your meal plan.")).toBeInTheDocument();
+  });
+
+  it("preselects the day and meal from an incoming meal slot when adding to plan", async () => {
+    const farFutureDate = new Date();
+    farFutureDate.setDate(farFutureDate.getDate() + 30);
+    const initialDay = toIsoDate(farFutureDate);
+
+    const user = userEvent.setup();
+    renderPageWithMealSlot({ date: initialDay, mealType: "breakfast" });
+
+    await screen.findByText("Chicken Caesar Taco Salad");
+    await user.click(screen.getByRole("button", { name: "Add to Plan" }));
+
+    expect((screen.getByLabelText("Day") as HTMLSelectElement).value).toBe(initialDay);
+    expect((screen.getByLabelText("Meal") as HTMLSelectElement).value).toBe("breakfast");
   });
 
   it("shows a sticky save button while editing and submits the edit form", async () => {

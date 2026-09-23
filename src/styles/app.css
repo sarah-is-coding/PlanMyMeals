@@ -782,6 +782,30 @@
   gap: 0.82rem;
 }
 
+.recipe-meal-slot-banner {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--alpha-brand-22);
+  border-radius: 0.65rem;
+  background: var(--alpha-brand-12);
+  color: var(--color-ink-soft);
+  font-size: 0.88rem;
+}
+
+.recipe-meal-slot-banner__cancel {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--brand-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recipe-meal-slot-banner__cancel:hover {
+  text-decoration: underline;
+}
+
 .recipe-toolbar {
   display: flex;
   gap: 0.55rem;
@@ -1699,6 +1723,17 @@
   color: var(--color-muted-soft);
 }
 
+.meal-slot__search-link {
+  justify-self: start;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-brand-dark);
+}
+
+.meal-slot__search-link:hover {
+  text-decoration: underline;
+}
+
 .meal-slot__items {
   list-style: none;
   margin: 0;
@@ -1771,7 +1806,7 @@
   cursor: not-allowed;
 }
 
-/* ── Collapsible panel toggle (shared by Browse/Find panels) ── */
+/* ── Collapsible panel toggle (used by the Browse past weeks panel) ── */
 .past-plan-panel__toggle {
   display: flex;
   justify-content: space-between;
@@ -1891,18 +1926,7 @@
   align-items: center;
 }
 
-/* ── Find recipes panel ───────────────────────────────────── */
-.meal-recipe-panel {
-  display: grid;
-  gap: 0.72rem;
-}
-
-.meal-recipe-panel__target-anchor {
-  position: relative;
-  min-height: 0;
-}
-
-/* Unlike .meal-recipe-panel__target-anchor, this deliberately has no
+/* Unlike an absolutely-positioned target anchor, this deliberately has no
    `position`, so the popup's absolute positioning resolves against the
    nearest positioned ancestor further up the tree (e.g. the button rail
    it sits in) instead of hugging this trigger's own narrow width. */
@@ -1953,66 +1977,6 @@
   justify-content: flex-end;
   gap: 0.48rem;
   flex-wrap: wrap;
-}
-
-.meal-recipe-results {
-  min-height: 7rem;
-}
-
-.meal-recipe-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.meal-recipe-card {
-  border: 1px solid var(--alpha-brand-22);
-  border-radius: 0.9rem;
-  background: var(--alpha-bg-241-88);
-  padding: 0.72rem;
-  display: grid;
-  gap: 0.58rem;
-  cursor: grab;
-}
-
-.meal-recipe-card:active {
-  cursor: grabbing;
-}
-
-.meal-recipe-card--clickable:hover,
-.meal-recipe-card--clickable:focus-visible {
-  border-color: var(--alpha-brand-dark-85);
-  box-shadow: 0 0 0 3px var(--alpha-brand-22);
-  outline: none;
-}
-
-.meal-recipe-card__head {
-  display: flex;
-  gap: 0.46rem;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.meal-recipe-card__head h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 0.98rem;
-}
-
-.meal-recipe-card__head span {
-  font-size: 0.8rem;
-  color: var(--color-muted-soft);
-}
-
-.meal-recipe-card__description {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 @media (max-width: 960px) {

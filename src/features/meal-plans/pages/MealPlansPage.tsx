@@ -1,27 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import LoadingModal from "../../../components/feedback/LoadingModal";
 import { useLoadingGate } from "../../../components/feedback/useLoadingGate";
 import {
-  addMealPlanItem,
   applySavedMealPlan,
   clearWeekPlan,
   deleteMealPlanItem,
   listMealPlanItemsForWeek,
   moveMealPlanItem,
-  searchPlannerRecipes,
   updateMealPlanItemServings,
 } from "../api";
 import MealPlannerCalendar from "../components/MealPlannerCalendar";
 import PastMealPlanPanel from "../components/PastMealPlanPanel";
-import RecipeAssignmentPanel from "../components/RecipeAssignmentPanel";
-import { DEFAULT_MEAL_TYPE } from "../constants";
 import {
+  createDateFromIso,
   formatWeekRangeLabel,
   getWeekDays,
   getWeekStartIso,
   shiftWeekStartIso,
 } from "../dateUtils";
-import type { MealPlanItem, MealPlannerRecipeSummary, MealType } from "../types";
+import type { MealPlanItem, MealType } from "../types";
 import {
   loadCachedMealPlanItems,
   saveCachedMealPlanItems,
@@ -31,15 +29,17 @@ import {
   saveMealPlannerViewState,
 } from "../utils/mealPlannerViewState";
 
+const isIsoDate = (value: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
 export default function MealPlansPage() {
+  const location = useLocation();
+  const jumpToDate = (location.state as { jumpToDate?: string } | null)?.jumpToDate;
+
   const [initialState] = useState(() => {
-    const defaultWeekStartIso = getWeekStartIso(new Date());
-    return loadMealPlannerViewState({
-      weekStartIso: defaultWeekStartIso,
-      searchInput: "",
-      selectedDay: defaultWeekStartIso,
-      selectedMealType: DEFAULT_MEAL_TYPE,
-    });
+    if (jumpToDate && isIsoDate(jumpToDate)) {
+      return { weekStartIso: getWeekStartIso(createDateFromIso(jumpToDate)) };
+    }
+    return loadMealPlannerViewState({ weekStartIso: getWeekStartIso(new Date()) });
   });
   const [initialCachedItems] = useState<MealPlanItem[] | null>(() =>
     loadCachedMealPlanItems(initialState.weekStartIso)
@@ -53,48 +53,17 @@ export default function MealPlansPage() {
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
   const [updatingServingsItemId, setUpdatingServingsItemId] = useState<string | null>(null);
 
-  const [searchInput, setSearchInput] = useState(initialState.searchInput);
-  const [searchTerm, setSearchTerm] = useState(initialState.searchInput.trim());
-  const [recipes, setRecipes] = useState<MealPlannerRecipeSummary[]>([]);
-  const [loadingRecipes, setLoadingRecipes] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-
   const weekDays = useMemo(() => getWeekDays(weekStartIso), [weekStartIso]);
   const weekLabel = useMemo(() => formatWeekRangeLabel(weekStartIso), [weekStartIso]);
 
-  const [selectedDay, setSelectedDay] = useState(initialState.selectedDay);
-  const [selectedMealType, setSelectedMealType] = useState<MealType>(
-    initialState.selectedMealType
-  );
-  const [assigningKey, setAssigningKey] = useState<string | null>(null);
   const showInitialLoadingModal = useLoadingGate(
     loadingItems && !hasLoadedInitialItems,
     { showDelayMs: 0, minVisibleMs: 480 }
   );
 
   useEffect(() => {
-    const currentWeekDates = new Set(weekDays.map((day) => day.dateIso));
-    if (!currentWeekDates.has(selectedDay)) {
-      setSelectedDay(weekDays[0]?.dateIso ?? "");
-    }
-  }, [selectedDay, weekDays]);
-
-  useEffect(() => {
-    const debounceId = window.setTimeout(() => {
-      setSearchTerm(searchInput.trim());
-    }, 220);
-
-    return () => window.clearTimeout(debounceId);
-  }, [searchInput]);
-
-  useEffect(() => {
-    saveMealPlannerViewState({
-      weekStartIso,
-      searchInput,
-      selectedDay,
-      selectedMealType,
-    });
-  }, [weekStartIso, searchInput, selectedDay, selectedMealType]);
+    saveMealPlannerViewState({ weekStartIso });
+  }, [weekStartIso]);
 
   useEffect(() => {
     let mounted = true;
@@ -133,81 +102,6 @@ export default function MealPlansPage() {
       mounted = false;
     };
   }, [weekStartIso]);
-
-  useEffect(() => {
-    let mounted = true;
-    if (!searchTerm) {
-      setRecipes([]);
-      setSearchError(null);
-      setLoadingRecipes(false);
-      return () => {
-        mounted = false;
-      };
-    }
-
-    const run = async () => {
-      setLoadingRecipes(true);
-      setSearchError(null);
-
-      try {
-        const nextRecipes = await searchPlannerRecipes(searchTerm);
-        if (mounted) {
-          setRecipes(nextRecipes);
-        }
-      } catch (error) {
-        if (mounted) {
-          setSearchError(error instanceof Error ? error.message : "Failed to search recipes.");
-        }
-      } finally {
-        if (mounted) {
-          setLoadingRecipes(false);
-        }
-      }
-    };
-
-    void run();
-
-    return () => {
-      mounted = false;
-    };
-  }, [searchTerm]);
-
-  const handleAssignRecipe = useCallback(
-    async (
-      recipeId: string,
-      plannedFor: string,
-      mealType: MealType,
-      servingsOverride: number | null
-    ) => {
-      if (!plannedFor) {
-        return;
-      }
-
-      const nextAssigningKey = `${recipeId}|${plannedFor}|${mealType}|${servingsOverride ?? "base"}`;
-      setAssigningKey(nextAssigningKey);
-      setPlannerError(null);
-
-      try {
-        const addedItem = await addMealPlanItem({
-          weekStartIso,
-          plannedFor,
-          mealType,
-          recipeId,
-          servingsOverride,
-        });
-        setItems((currentItems) => {
-          const nextItems = [...currentItems, addedItem];
-          saveCachedMealPlanItems(weekStartIso, nextItems);
-          return nextItems;
-        });
-      } catch (error) {
-        setPlannerError(error instanceof Error ? error.message : "Failed to add recipe.");
-      } finally {
-        setAssigningKey((currentKey) => (currentKey === nextAssigningKey ? null : currentKey));
-      }
-    },
-    [weekStartIso]
-  );
 
   const handleRemoveItem = useCallback(async (itemId: string) => {
     setRemovingItemId(itemId);
@@ -333,7 +227,6 @@ export default function MealPlansPage() {
             setWeekStartIso((currentIso) => shiftWeekStartIso(currentIso, weekOffset))
           }
           onJumpToCurrentWeek={() => setWeekStartIso(getWeekStartIso(new Date()))}
-          onAssignRecipe={handleAssignRecipe}
           onMoveItem={handleMoveItem}
           onUpdateItemServings={handleUpdateItemServings}
           onRemoveItem={handleRemoveItem}
@@ -345,20 +238,6 @@ export default function MealPlansPage() {
             currentWeekHasItems={items.length > 0}
             onJumpToWeek={setWeekStartIso}
             onApplyPlan={handleApplyPlan}
-          />
-          <RecipeAssignmentPanel
-            recipes={recipes}
-            searchInput={searchInput}
-            loading={loadingRecipes}
-            error={searchError}
-            selectedDay={selectedDay}
-            selectedMealType={selectedMealType}
-            weekDays={weekDays}
-            assigningKey={assigningKey}
-            onSearchInputChange={setSearchInput}
-            onSelectedDayChange={setSelectedDay}
-            onSelectedMealTypeChange={setSelectedMealType}
-            onAssignRecipe={handleAssignRecipe}
           />
         </div>
       </div>

@@ -7,15 +7,6 @@ export type MealPlannerDay = {
   fullLabel: string;
 };
 
-export type MealPlannerRecipeSummary = {
-  id: string;
-  title: string;
-  description: string | null;
-  prepMinutes: number | null;
-  cookMinutes: number | null;
-  servings: number | null;
-};
-
 export type MealPlanItem = {
   id: string;
   recipeId: string | null;
